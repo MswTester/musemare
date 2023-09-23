@@ -19,9 +19,47 @@
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    to bottom,
+    transparent,
+    rgb(var(--background-end-rgb))
+  )
+  rgb(var(--background-start-rgb));
+  overflow: hidden;
+}
+
+*{
+  // 주석처리로 보더박스 표시
+  // border: 1px solid red;
+  box-sizing: border-box;
+}
+
+// 풀스크린
+.fullscreen{
+  width: 100vw;
+  height: 100vh;
+}
+
+.MainMenu{
+  background-color: rgba($color: #000000, $alpha: 1.0);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  color: white;
+  user-select: none;
+  img{
+    margin-left: 5%;
+    width: min(40vw, 70vh);
+  }
+  .menu{
+    margin-left: 5%;
+    div{
+      font-size: min(4vh, 2.2vw);
+      padding: min(1vh, 0.6vw);
+      width: fit-content;
+      cursor: pointer;
+    }
+    div:hover{
+      text-decoration: underline;
+    }
+  }
 }
