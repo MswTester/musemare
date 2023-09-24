@@ -322,6 +322,9 @@ canvas.Battle{
             background-color: rgba($color: #ffffff, $alpha: 0.1);
           }
         }
+        &.selected{
+          background-color: rgba($color: #202020, $alpha: 0.2);
+        }
       }
     }
   }

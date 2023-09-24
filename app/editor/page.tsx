@@ -33,8 +33,8 @@ export default function Page(){
     const [timeline, setTimeline] = useState<number>(0)
     const [gridLine, setGridLine] = useState<number[]>([])
     const [sel, setSel] = useState<string>('chart')
-    const [focusEvent, setFocusEvent] = useState<[string, number]>(['', 0]) // "event parent tag", index
-    const [focusObj, setFocusObj] = useState<number>(0)
+    const [focusEvent, setFocusEvent] = useState<[number, number]>([-1, 0]) // 0 = main | other = obj's idx, index
+    const [focusObj, setFocusObj] = useState<number>(-1)
 
     let v_playing:boolean = false, v_zoom:number = 100, v_timeline = 0
     
@@ -49,7 +49,7 @@ export default function Page(){
     useEffect(() => {
         setLang(navigator.language)
         setCondset([innerWidth, innerHeight])
-        
+
         // canvas
         const canvas = document.querySelector('canvas') as HTMLCanvasElement
         const ctx = canvas.getContext('2d')
@@ -130,7 +130,7 @@ export default function Page(){
         const contextmenu = (e:Event) => {
             e.preventDefault()
         }
-        
+
         document.addEventListener('contextmenu', contextmenu)
         document.addEventListener('mousemove', mousemove)
         document.addEventListener('mousedown', mousedown)
@@ -327,10 +327,34 @@ export default function Page(){
         }
     }, [rowScroll])
 
+    
+    const addObj = () => {
+        console.log(sel)
+    }
+    
+    const addEv = () => {
+        let _arr:event[] = JSON.parse(JSON.stringify(events))
+        _arr.push({stamp:timeline, type:'volume', value:10, duration:60/bpm})
+        setEvents(_arr)
+    }
+    
+    const remEv = (_idx:number) => {
+        let _arr:event[] = JSON.parse(JSON.stringify(events))
+        _arr.splice(_idx, 1)
+        setEvents(_arr)
+    }
+
+    // 오브젝트 및 이벤트 선택 & 삭제 & 해제 & 수정
     useEffect(() => {
         function keydown(e:KeyboardEvent){
+            // 옵젝 & 이벤트 삭제
             if(e.code == 'Delete'){
-
+                if(focusEvent[0] == 0){
+                    remEv(focusEvent[1])
+                    setFocusEvent([-1, 0])
+                } else {
+                    // remEv
+                }
             }
         }
         document.addEventListener('keydown', keydown)
@@ -338,17 +362,7 @@ export default function Page(){
             document.removeEventListener('keydown', keydown)
         }
     }, [events, objs, focusEvent, focusObj])
-
-    const addObj = () => {
-        console.log(sel)
-    }
-
-    const addEv = () => {
-        let _arr:event[] = JSON.parse(JSON.stringify(events))
-        _arr.push({stamp:timeline, type:'volume', value:10, duration:60/bpm})
-        setEvents(_arr)
-    }
-
+    
     return <div className="Editor">
         <div style={{height:`${100-underbarLine}%`}} className="workspace">
             <div style={{width:`${mainsetLine}%`}} className="mainset">
@@ -379,7 +393,7 @@ export default function Page(){
         </div>
         <div style={{height:`${underbarLine}%`}} className="underbar">
             <div style={{width:`${objLine}%`}} className="objs">
-                <div className="description">Objects
+                <div className="description" onClick={e => setFocusObj(-1)}>Objects
                     <div className="right">
                     <select name="" id="" value={sel} onChange={e => setSel(e.target.value)}>
                         <option value="chart">Chart</option>
@@ -387,7 +401,7 @@ export default function Page(){
                     </select>
                     <button onClick={e => addObj()}>+</button></div>
                 </div>
-                <div>Main <button onClick={e => addEv()}>Add Event</button></div>
+                <div className={focusObj == 0 ? 'selected' : ''} onClick={e => setFocusObj(0)}>Main <button onClick={e => addEv()}>Add Event</button></div>
             </div>
             <div style={{width:`${100-objLine}%`}} className="timeline">
                 <div className="controls">
@@ -409,8 +423,8 @@ export default function Page(){
                         {events.map((v, i) => (
                             (condset[0] /100 * (100-objLine) * v.stamp / endpoint)*(zoom/100) + rowScroll >= 0 &&
                             <div key={i} style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v.stamp / endpoint)*(zoom/100) + rowScroll - 8}px`}}
-                            className={`box ${focusEvent[0] == 'Main' && focusEvent[1] == i ? 'selected' : ''}`}
-                            onClick={e => setFocusEvent(['Main', i])}></div>
+                            className={`box ${focusEvent[0] == 0 && focusEvent[1] == i ? 'selected' : ''}`}
+                            onClick={e => setFocusEvent([0, i])}></div>
                         ))}
                     </div>
                 </div>
