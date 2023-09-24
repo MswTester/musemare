@@ -8,11 +8,14 @@ const dragRange = 6
 
 export default function Page(){
     const [lang, setLang] = useState<string>('en-US')
+    // ui settings
     const [underbarLine, setUnderbarLine] = useState<number>(30)
     const [mainsetLine, setMainsetLine] = useState<number>(20)
     const [eventsetLine, setEventsetLine] = useState<number>(20)
     const [objLine, setObjLine] = useState<number>(20)
     const [condset, setCondset] = useState<number[]>([0, 0])
+    const [rowScroll, setRowScroll] = useState<number>(0)
+
     // default settings
     const [bpm, setBpm] = useState<number>(100)
     const [offset, setOffset] = useState<number>(0)
@@ -36,6 +39,7 @@ export default function Page(){
     let obl = 20
     let Dragging = ''
     let cont_dragging = false
+    let scrow_dragging = false
     
     useEffect(() => {
         setLang(navigator.language)
@@ -70,7 +74,7 @@ export default function Page(){
         }
         function wheel(e:WheelEvent){
             if(e.altKey){
-                v_zoom += e.deltaY / 100
+                v_zoom += (v_zoom/8)*(e.deltaY / 100)
                 v_zoom < 1 && (v_zoom = 1)
                 setZoom(v_zoom)
             }
@@ -81,16 +85,12 @@ export default function Page(){
         function mousedown(e:MouseEvent){
             if(isInRange(e.clientY, dragRange, innerHeight / 100 * (100-ubl))){
                 Dragging = 'underbar'
-                cont_dragging = false
             } else if(isInRange(e.clientX, dragRange, innerWidth / 100 * (msl)) && e.clientY < (innerHeight / 100 * (100-ubl))){
                 Dragging = 'mainset'
-                cont_dragging = false
             } else if(isInRange(e.clientX, dragRange, innerWidth / 100 * (100-esl)) && e.clientY < (innerHeight / 100 * (100-ubl))){
                 Dragging = 'eventset'
-                cont_dragging = false
             } else if(isInRange(e.clientX, dragRange, innerWidth / 100 * (obl)) && e.clientY > (innerHeight / 100 * (100-ubl))){
                 Dragging = 'objs'
-                cont_dragging = false
             }
         }
         function mousemove(e:MouseEvent){
@@ -210,6 +210,7 @@ export default function Page(){
 
     useEffect(() => {
         const controls = document.querySelector('.controls') as HTMLDivElement
+        const scrowbar = document.querySelector('.scrollbar-row > div') as HTMLDivElement
 
         const checkEnd = setInterval(() => {
             const audio = document.querySelector('audio') as HTMLAudioElement
@@ -224,12 +225,21 @@ export default function Page(){
         }, 1)
         function mousemove(e:MouseEvent){
             if(cont_dragging){
-                let res = endpoint * (e.clientX - innerWidth/100*obl) / (innerWidth/100*(100-obl))
+                let res:number = (endpoint * (e.clientX - innerWidth/100*objLine) / (innerWidth/100*(100-objLine)))/(zoom/100)
+                if(e.shiftKey){
+                    let rz = 5-Math.round(zoom/100)
+                    let f = (2**(rz < 1 ? 1 : rz))
+                    let gap = (gridLine[1] - gridLine[0]) * f
+                    res = Math.round(res / gap) * gap
+                }
                 v_setTimeline(res < 0 ? 0 : res > endpoint ? endpoint : res)
+            } else if(scrow_dragging) {
+                // scroll logic
             }
         }
         function mouseup(e:MouseEvent){
             cont_dragging = false
+            scrow_dragging = false
         }
         function controls_mousedown(e:MouseEvent){
             if(!Dragging){
@@ -238,15 +248,24 @@ export default function Page(){
                 mousemove(e)
             }
         }
+        function scrowbar_mousedown(e:MouseEvent){
+            if(!Dragging){
+                scrow_dragging = true
+                Dragging = ''
+                mousemove(e)
+            }
+        }
         const keydown = (e:KeyboardEvent) => {
+            let isNumlock = e.getModifierState('NumLock')
             if(e.code == 'Space'){
                 playLevel()
-            } else if(e.code == 'Home'){
+            } else if(e.code == 'Home' || (e.code == 'Numpad7' && !isNumlock)){
                 v_setTimeline(0)
-            } else if(e.code == 'End'){
+            } else if(e.code == 'End' || (e.code == 'Numpad1' && !isNumlock)){
                 v_setTimeline(endpoint)
             }
         }
+        scrowbar.addEventListener('mousedown', scrowbar_mousedown)
         controls.addEventListener('mousedown', controls_mousedown)
         document.addEventListener('mouseup', mouseup)
         document.addEventListener('mousemove', mousemove)
@@ -258,7 +277,7 @@ export default function Page(){
             document.removeEventListener('mouseup', mouseup)
             document.removeEventListener('mousemove', mousemove)
         }
-    }, [endpoint, playing, offset])
+    }, [endpoint, playing, offset, objLine, zoom, gridLine])
 
     useEffect(() => {
         const audio = document.querySelector('audio') as HTMLAudioElement
@@ -271,8 +290,21 @@ export default function Page(){
         for(let i = 0; i < Math.floor(endpoint/c); i++){
             arr.push(i*c)
         }
+        arr.push(endpoint)
         setGridLine(arr)
     }, [bpm, grid, endpoint])
+
+    useEffect(() => {
+        function wheel(e:WheelEvent){
+            if(e.ctrlKey){
+                setRowScroll(rowScroll-e.deltaY)
+            }
+        }
+        document.addEventListener('wheel', wheel)
+        return () => {
+            document.removeEventListener('wheel', wheel)
+        }
+    }, [rowScroll])
 
     return <div className="Editor">
         <div style={{height:`${100-underbarLine}%`}} className="workspace">
@@ -305,21 +337,27 @@ export default function Page(){
         <div style={{height:`${underbarLine}%`}} className="underbar">
             <div style={{width:`${objLine}%`}} className="objs">
                 <div className="description">Objects</div>
+                <div>{rowScroll}</div>
             </div>
             <div style={{width:`${100-objLine}%`}} className="timeline">
                 <div className="controls">
-                    <div style={{marginLeft:`${condset[0] /100 * (100-objLine) * timeline / endpoint - 11}px`}} className="timelineGrab"></div>
+                    <div style={{marginLeft:`${(condset[0] /100 * (100-objLine) * timeline / endpoint)*(zoom/100) - 11}px`}} className="timelineGrab"></div>
                 </div>
                 <div className="overlay">
                     {gridLine.map((v, i) => (
-                        <div style={{marginLeft:`${condset[0] /100 * (100-objLine) * v / endpoint}px`}}
-                        className={i % grid == 0 ? 'grid' : 'grid m'} key={i}></div>
+                        i+1 == gridLine.length ? <div key={i} style={{marginLeft:`${(condset[0] /100 * (100-objLine))*(zoom/100) + rowScroll}px`}} className="grid end"></div> :
+                        i % (2**(5-Math.round(zoom/100) < 1 ? 1 : 5-Math.round(zoom/100))) == 0 &&
+                        <div style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v / endpoint)*(zoom/100) + rowScroll}px`}}
+                        className={i % (grid*(2**(5-Math.round(zoom/100) < 1 ? 1 : 5-Math.round(zoom/100)))) == 0 ? 'grid' : 'grid m'} key={i}></div>
                     ))}
-                    <div className="bar" style={{marginLeft:`${condset[0] /100 * (100-objLine) * timeline / endpoint}px`}}></div>
+                    <div className="bar" style={{marginLeft:`${(condset[0] /100 * (100-objLine) * timeline / endpoint)*(zoom/100) + rowScroll}px`}}></div>
                 </div>
                 <div className="events">
-                    <div>eventline</div>
+                    <div>event</div>
+                    <div>event</div>
+                    <div>event</div>
                 </div>
+                <div className="scrollbar-row"><div style={{width:`${10000/zoom}%`, marginLeft:`rowScroll`}}></div></div>
             </div>
         </div>
         <input type="file" name="" id="fileInput" style={{display:'none'}} />

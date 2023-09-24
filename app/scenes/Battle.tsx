@@ -32,8 +32,11 @@ export default function Index(){
     useEffect(() => {
         let dt = 0
         let loop = setInterval(() => {
-
+            dt++
         }, 1)
+        return () => {
+            clearInterval(loop)
+        }
     }, [])
 
     return <canvas className="Battle"></canvas>
