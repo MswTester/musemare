@@ -7,8 +7,8 @@ export const levels:{[key:string]:level} = {
         events:[],
         offset:0,
         song:"assets/song/something.mp3",
-        sprites:[],
-        volume:100,
+        volume:70,
         endpoint:90,
+        objs:[],
     }
 }

@@ -15,6 +15,10 @@ const langs:{[key:string]:{[key:string]:string}} = {
         'ko':'설정',
         'en':'Settings',
     },
+    'credits':{
+        'ko':'크레딧',
+        'en':'Credits',
+    },
     'goback':{
         'ko':'뒤로가기',
         'en':'Back',
@@ -38,6 +42,30 @@ const langs:{[key:string]:{[key:string]:string}} = {
     'press skip':{
         'ko':'[F]키를 눌러 스킵',
         'en':'Press [F] key to skip',
+    },
+    'teampani':{
+        'ko':'팀파니 (TeamPani)',
+        'en':'TeamPani',
+    },
+    'design':{
+        'ko':'기획',
+        'en':'Design',
+    },
+    'illustration':{
+        'ko':'그림',
+        'en':'Illustration',
+    },
+    'development':{
+        'ko':'개발',
+        'en':'Development',
+    },
+    'specialthanks':{
+        'ko':'고마운 분들',
+        'en':'Special Thanks',
+    },
+    'story':{
+        'ko':'스토리',
+        'en':'Story',
     },
 }
 

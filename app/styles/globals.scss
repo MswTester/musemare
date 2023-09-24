@@ -28,7 +28,7 @@ body {
 }
 
 *{
-  // 주석처리로 보더박스 표시
+  // 디버깅용도 : 주석처리로 보더박스 표시
   // border: 1px solid red;
   box-sizing: border-box;
 }
@@ -44,7 +44,8 @@ body {
 }
 
 .MainMenu{
-  background-image: url('../../public/assets/background/testbg.png');
+  background-image: url('../../public/assets/background/menubg.png');
+  background-position: center;
   background-size: cover;
   display: flex;
   flex-direction: column;
@@ -69,8 +70,45 @@ body {
   }
 }
 
+.Credits{
+  background-image: url('../../public/assets/background/menubg.png');
+  background-position: center;
+  background-size: cover;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  user-select: none;
+  div:not(.goback){
+    &.teampani{
+      font-size: min(6vh, 3vw);
+    }
+    &:not(.teampani){
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      div{
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        div {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          font-size: min(3vh, 1.5vw);
+          margin: 10px;
+          &.direct>div{text-align: right;}
+          &:not(.direct){text-align: left;}
+        };
+      }
+    }
+  }
+}
+
 .Settings{
-  background-image: url('../../public/assets/background/testbg.png');
+  background-image: url('../../public/assets/background/menubg.png');
+  background-position: center;
   background-size: cover;
   display: flex;
   flex-direction: column;
@@ -114,17 +152,18 @@ body {
       padding: min(1vw, 2vh);
     }
   }
-  .goback{
-    position: absolute;
-    background-color: rgba($color: #000000, $alpha: 0.8);
-    cursor: pointer;
-    text-align: center;
-    left: min(2vh, 1vw);
-    bottom: min(2vh, 1vw);
-    padding: min(2vh, 1vw);
-    border-radius: min(2vh, 1vw);
-    font-size: min(2.4vh, 1.3vw);
-  }
+}
+.goback{
+  position: absolute;
+  background-color: rgba($color: #000000, $alpha: 0.8);
+  cursor: pointer;
+  text-align: center;
+  left: min(2vh, 1vw);
+  bottom: min(2vh, 1vw);
+  padding: min(2vh, 1vw);
+  border-radius: min(2vh, 1vw);
+  font-size: min(2.4vh, 1.3vw);
+  &:hover{text-decoration: underline;}
 }
 
 .Intro-vid{
@@ -179,7 +218,7 @@ canvas.Battle{
           height: 0;
           border-right: 12px solid transparent;
           border-left: 12px solid transparent;
-          border-top: 20px solid rgba($color: #ff0000, $alpha: 1.0);
+          border-top: 24px solid rgba($color: #ff0000, $alpha: 1.0);
         }
       }
       .overlay{
@@ -199,14 +238,34 @@ canvas.Battle{
           &.m{
             background-color: rgba($color: #5f5f5f, $alpha: 1.0);
           }
+          &.start{
+            background-color: rgba($color: #ffff00, $alpha: 1.0);
+          }
           &.end{
-            background-color: rgba($color: #ffffff, $alpha: 1.0);
+            background-color: rgba($color: #ffff00, $alpha: 1.0);
           }
         }
       }
       .events{
         height: 100%;
         overflow: hidden;
+        div{
+          position: absolute;
+          width: 100%;
+          height: 26px;
+          background-color: rgba($color: #000000, $alpha: 0.2);
+          border: rgba($color: #ffffff, $alpha: 0.2) 1px solid;
+          div.box{
+            width: 16px;
+            height: 16px;
+            margin-top: 4px;
+            border-radius: 3px;
+            background-color: white;
+            &.selected{
+              background-color: rgba($color: skyblue, $alpha: 1.0);
+            }
+          }
+        }
       }
       .scrollbar-row{
         position: absolute;
@@ -227,7 +286,42 @@ canvas.Battle{
       height: 100%;
       background-color: #222222;
       .description{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
         background-color: #131313;
+        div.right{
+          select{
+            background-color: transparent;
+            option{
+              background-color: black;
+            }
+          }
+          button{
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0 10px;
+            &:hover{
+              background-color: rgba($color: #ffffff, $alpha: 0.1);
+            }
+          }
+        }
+      }
+      div:not(.description, .right){
+        background-color: rgba($color: #000000, $alpha: 0.2);
+        border: rgba($color: #ffffff, $alpha: 0.2) 1px solid;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        button{
+          background-color: rgba($color: #000000, $alpha: 0.2);
+          cursor: pointer;
+          font-weight: bold;
+          padding: 0 10px;
+          &:hover{
+            background-color: rgba($color: #ffffff, $alpha: 0.1);
+          }
+        }
       }
     }
   }

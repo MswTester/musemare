@@ -1,14 +1,32 @@
-interface event{
+type ease = 'linear'|'insine'|'outsine'|'sine'
+
+export interface event{
     stamp:number;
-    type:string;
-    value?:number;
+    type:'volume'|'bgcolor'|'filter'|'wiggle';
+    value?:any;
     duration?:number;
 }
 
-interface sprite{
-    src:string;
-    x:number;
-    y:number;
+export interface objEvent{
+    stamp:number;
+    type:'transform'|'rotate'|'scale'|'opacity'|'anchor'|'speed'|'ease'|'visible';
+    value?:any;
+    duration?:number;
+    ease?:ease;
+}
+
+export interface obj{
+    type:'chart'|'sprite';
+    bpm?:number; // speed bpm
+    notes?:number[]; // notes' timestamps(s)
+    src?:string;
+    position:number[];
+    rotate:number;
+    scale:number;
+    opacity:number;
+    anchor:number[];
+    events:objEvent[];
+    ease?:ease;
 }
 
 export interface level{
@@ -18,6 +36,6 @@ export interface level{
     backgroundColor:string;
     volume:number;
     events:event[];
-    sprites:sprite[];
+    objs:obj[];
     endpoint:number;
 }

@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { ContextType, useEffect, useState } from "react"
 import { isInRange } from "../data/utils"
-import { level } from "../data/types"
+import { obj, event, level } from "../data/types"
 
 const dragRange = 6
 
@@ -23,14 +23,19 @@ export default function Page(){
     const [BackgroundColor, setBackgroundColor] = useState<string>('#000000')
     const [volume, setVolume] = useState<number>(100)
     const [endpoint, setEndpoint] = useState<number>(90)
-    
+    const [events, setEvents] = useState<event[]>([])
+    const [objs, setObjs] = useState<obj[]>([])
+
     // env settings
     const [grid, setGrid] = useState<number>(4)
     const [playing, setPlaying] = useState<boolean>(false)
     const [zoom, setZoom] = useState<number>(100)
     const [timeline, setTimeline] = useState<number>(0)
     const [gridLine, setGridLine] = useState<number[]>([])
-    
+    const [sel, setSel] = useState<string>('chart')
+    const [focusEvent, setFocusEvent] = useState<[string, number]>(['', 0]) // "event parent tag", index
+    const [focusObj, setFocusObj] = useState<number>(0)
+
     let v_playing:boolean = false, v_zoom:number = 100, v_timeline = 0
     
     let ubl = 30
@@ -70,13 +75,6 @@ export default function Page(){
         function keydown(e:KeyboardEvent){
             if(e.altKey){
                 e.preventDefault()
-            }
-        }
-        function wheel(e:WheelEvent){
-            if(e.altKey){
-                v_zoom += (v_zoom/8)*(e.deltaY / 100)
-                v_zoom < 1 && (v_zoom = 1)
-                setZoom(v_zoom)
             }
         }
         function mouseup(e:MouseEvent){
@@ -128,17 +126,21 @@ export default function Page(){
                 }
             }
         }
+
+        const contextmenu = (e:Event) => {
+            e.preventDefault()
+        }
         
+        document.addEventListener('contextmenu', contextmenu)
         document.addEventListener('mousemove', mousemove)
         document.addEventListener('mousedown', mousedown)
         document.addEventListener('mouseup', mouseup)
-        document.addEventListener('wheel', wheel)
         document.addEventListener('keydown', keydown)
         return () => {
+            document.removeEventListener('contextmenu', contextmenu)
             document.removeEventListener('mousemove', mousemove)
             document.removeEventListener('mousedown', mousedown)
             document.removeEventListener('mouseup', mouseup)
-            document.removeEventListener('wheel', wheel)
             document.removeEventListener('keydown', keydown)
         }
     }, [])
@@ -153,6 +155,12 @@ export default function Page(){
         setEndpoint(90)
         setPlaying(false)
         setZoom(100)
+        setRowScroll(0)
+        v_setTimeline(0)
+        setEvents([])
+        setObjs([])
+        v_playing = false
+        v_zoom = 0
     }
 
     const openLevel = () => {
@@ -176,6 +184,8 @@ export default function Page(){
                     setBackgroundColor(level.backgroundColor)
                     setVolume(level.volume)
                     setEndpoint(level.endpoint)
+                    setObjs(level.objs)
+                    setEvents(level.events)
                 };
 
                 reader.readAsText(selectedFile);
@@ -225,7 +235,7 @@ export default function Page(){
         }, 1)
         function mousemove(e:MouseEvent){
             if(cont_dragging){
-                let res:number = (endpoint * (e.clientX - innerWidth/100*objLine) / (innerWidth/100*(100-objLine)))/(zoom/100)
+                let res:number = (endpoint * (e.clientX-rowScroll - innerWidth/100*objLine) / (innerWidth/100*(100-objLine)))/(zoom/100)
                 if(e.shiftKey){
                     let rz = 5-Math.round(zoom/100)
                     let f = (2**(rz < 1 ? 1 : rz))
@@ -277,7 +287,7 @@ export default function Page(){
             document.removeEventListener('mouseup', mouseup)
             document.removeEventListener('mousemove', mousemove)
         }
-    }, [endpoint, playing, offset, objLine, zoom, gridLine])
+    }, [endpoint, playing, offset, objLine, zoom, gridLine, rowScroll])
 
     useEffect(() => {
         const audio = document.querySelector('audio') as HTMLAudioElement
@@ -295,16 +305,49 @@ export default function Page(){
     }, [bpm, grid, endpoint])
 
     useEffect(() => {
+        const ev = document.querySelector('.timeline') as HTMLDivElement
+        function wheelev(e:WheelEvent){
+            if(!e.altKey){
+                let res = rowScroll-e.deltaY
+                setRowScroll(res > 0 ? 0 : res)
+            }
+        }
         function wheel(e:WheelEvent){
-            if(e.ctrlKey){
-                setRowScroll(rowScroll-e.deltaY)
+            if(e.altKey){
+                v_zoom -= (v_zoom/8)*(e.deltaY / 100)
+                v_zoom < 1 && (v_zoom = 1)
+                setZoom(v_zoom)
             }
         }
         document.addEventListener('wheel', wheel)
+        ev.addEventListener('wheel', wheelev)
         return () => {
             document.removeEventListener('wheel', wheel)
+            ev.removeEventListener('wheel', wheelev)
         }
     }, [rowScroll])
+
+    useEffect(() => {
+        function keydown(e:KeyboardEvent){
+            if(e.code == 'Delete'){
+
+            }
+        }
+        document.addEventListener('keydown', keydown)
+        return () => {
+            document.removeEventListener('keydown', keydown)
+        }
+    }, [events, objs, focusEvent, focusObj])
+
+    const addObj = () => {
+        console.log(sel)
+    }
+
+    const addEv = () => {
+        let _arr:event[] = JSON.parse(JSON.stringify(events))
+        _arr.push({stamp:timeline, type:'volume', value:10, duration:60/bpm})
+        setEvents(_arr)
+    }
 
     return <div className="Editor">
         <div style={{height:`${100-underbarLine}%`}} className="workspace">
@@ -336,28 +379,44 @@ export default function Page(){
         </div>
         <div style={{height:`${underbarLine}%`}} className="underbar">
             <div style={{width:`${objLine}%`}} className="objs">
-                <div className="description">Objects</div>
-                <div>{rowScroll}</div>
+                <div className="description">Objects
+                    <div className="right">
+                    <select name="" id="" value={sel} onChange={e => setSel(e.target.value)}>
+                        <option value="chart">Chart</option>
+                        <option value="sprite">Sprite</option>
+                    </select>
+                    <button onClick={e => addObj()}>+</button></div>
+                </div>
+                <div>Main <button onClick={e => addEv()}>Add Event</button></div>
             </div>
             <div style={{width:`${100-objLine}%`}} className="timeline">
                 <div className="controls">
-                    <div style={{marginLeft:`${(condset[0] /100 * (100-objLine) * timeline / endpoint)*(zoom/100) - 11}px`}} className="timelineGrab"></div>
+                    <div style={{marginLeft:`${(condset[0] /100 * (100-objLine) * timeline / endpoint)*(zoom/100) + rowScroll - 11}px`}} className="timelineGrab"></div>
                 </div>
                 <div className="overlay">
                     {gridLine.map((v, i) => (
+                        (condset[0] /100 * (100-objLine) * v / endpoint)*(zoom/100) + rowScroll >= 0 && (
+                        i == 0 ? <div key={i} style={{marginLeft:`${rowScroll}px`}} className="grid start"></div> :
                         i+1 == gridLine.length ? <div key={i} style={{marginLeft:`${(condset[0] /100 * (100-objLine))*(zoom/100) + rowScroll}px`}} className="grid end"></div> :
                         i % (2**(5-Math.round(zoom/100) < 1 ? 1 : 5-Math.round(zoom/100))) == 0 &&
                         <div style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v / endpoint)*(zoom/100) + rowScroll}px`}}
-                        className={i % (grid*(2**(5-Math.round(zoom/100) < 1 ? 1 : 5-Math.round(zoom/100)))) == 0 ? 'grid' : 'grid m'} key={i}></div>
+                        className={i % (grid*(2**(5-Math.round(zoom/100) < 1 ? 1 : 5-Math.round(zoom/100)))) == 0 ? 'grid' : 'grid m'} key={i}></div>)
                     ))}
                     <div className="bar" style={{marginLeft:`${(condset[0] /100 * (100-objLine) * timeline / endpoint)*(zoom/100) + rowScroll}px`}}></div>
                 </div>
                 <div className="events">
-                    <div>event</div>
-                    <div>event</div>
-                    <div>event</div>
+                    <div>
+                        {events.map((v, i) => (
+                            (condset[0] /100 * (100-objLine) * v.stamp / endpoint)*(zoom/100) + rowScroll >= 0 &&
+                            <div key={i} style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v.stamp / endpoint)*(zoom/100) + rowScroll - 8}px`}}
+                            className={`box ${focusEvent[0] == 'Main' && focusEvent[1] == i ? 'selected' : ''}`}
+                            onClick={e => setFocusEvent(['Main', i])}></div>
+                        ))}
+                    </div>
                 </div>
-                <div className="scrollbar-row"><div style={{width:`${10000/zoom}%`, marginLeft:`rowScroll`}}></div></div>
+                <div className="scrollbar-row" style={{width:`${100-objLine}%`}}><div
+                style={{width:`${(condset[0] /100 * (100-objLine)) /(zoom/100)}px`,
+                marginLeft:`${((condset[0] /100 * (100-objLine))-(condset[0] /100 * (100-objLine)/(zoom/100)))*(-rowScroll)/((condset[0] /100 * (100-objLine)) * (zoom/100) - (condset[0] /100 * (100-objLine)))}px`}}></div></div>
             </div>
         </div>
         <input type="file" name="" id="fileInput" style={{display:'none'}} />

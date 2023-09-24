@@ -4,6 +4,7 @@ import { createContext, useEffect, useState } from "react"
 import MainMenu from './scenes/MainMenu'
 import Intro from './scenes/Intro'
 import Settings from './scenes/Settings'
+import Credits from './scenes/Credits'
 import Battle from './scenes/Battle'
 
 // 글로벌 설정
@@ -38,6 +39,7 @@ export default function Index(){
             scene == 'Intro' ? <Intro /> :
             scene == 'MainMenu' ? <MainMenu /> :
             scene == 'Settings' ? <Settings /> :
+            scene == 'Credits' ? <Credits /> :
             scene == 'Battle' ? <Battle /> :
             <></>)
         }
