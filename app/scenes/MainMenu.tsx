@@ -48,7 +48,7 @@ export default function Index(){
 
     return <div style={{filter:`blur(${blur}px) brightness(${brightness})`}}
     className="MainMenu fullscreen blackbg">
-        <img src="assets/ui/title.png" alt="" />
+        <img src="assets/ui/title.svg" alt="" />
         <div className="menu">
             {['new game', 'continue', 'settings', 'credits'].map((v, i) => (
                 <div key={i} onClick={e => buttonInput(v)}>{toLang(lang, v)}</div>
