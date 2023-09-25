@@ -1,19 +1,24 @@
-type ease = 'linear'|'insine'|'outsine'|'sine'
+export type ease = 'linear'|'insine'|'outsine'|'sine';
+export type objEvType = 'transform'|'rotate'|'scale'|'opacity'|'anchor'|'speed'|'ease'|'visible'|'change';
+export type mainEvType = 'volume'|'bgcolor'|'filter'|'wiggle';
 
 export interface event{
     stamp:number;
-    type:'volume'|'bgcolor'|'filter'|'wiggle';
-    value?:any;
-    duration?:number;
-}
-
-export interface objEvent{
-    stamp:number;
-    type:'transform'|'rotate'|'scale'|'opacity'|'anchor'|'speed'|'ease'|'visible';
+    type:mainEvType;
     value?:any;
     duration?:number;
     ease?:ease;
 }
+export type eventProps = 'stamp'|'type'|'value'|'duration'|'ease'
+
+export interface objEvent{
+    stamp:number;
+    type:objEvType
+    value?:any;
+    duration?:number;
+    ease?:ease;
+}
+export type objEventProps = 'stamp'|'type'|'value'|'duration'|'ease'
 
 export interface obj{
     type:'chart'|'sprite';
@@ -22,12 +27,13 @@ export interface obj{
     src?:string;
     position:number[];
     rotate:number;
-    scale:number;
+    scale:number[];
     opacity:number;
     anchor:number[];
     events:objEvent[];
     ease?:ease;
 }
+export type objProps = 'type'|'bpm'|'notes'|'src'|'position'|'rotate'|'scale'|'opacity'|'anchor'|'events'|'ease'
 
 export interface level{
     bpm:number;
@@ -39,3 +45,4 @@ export interface level{
     objs:obj[];
     endpoint:number;
 }
+export type levelProps = 'bpm'|'offset'|'song'|'backgroundColor'|'volume'|'events'|'objs'|'endpoint'
