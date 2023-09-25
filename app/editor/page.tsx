@@ -2,7 +2,7 @@
 
 import { ContextType, useEffect, useState } from "react"
 import { isInRange } from "../data/utils"
-import { obj, event, level, objEvent, mainEvType, eventProps } from "../data/types"
+import { obj, event, level, objEvent, mainEvType, eventProps, objEventProps } from "../data/types"
 
 const dragRange = 6
 
@@ -355,7 +355,7 @@ export default function Page(){
     
     const addEv = () => {
         let _arr:event[] = JSON.parse(JSON.stringify(events))
-        _arr.push({stamp:timeline, type:'volume', value:100, duration:60/bpm, ease:'linear'})
+        _arr.push({stamp:timeline, type:'volume', value:100, duration:60/bpm, ease:'linear', smooth:true, speed:10})
         setEvents(_arr)
     }
     
@@ -407,10 +407,26 @@ export default function Page(){
         setObjs(_arr)
     }
 
-    const setEv = (_i:number, _t:eventProps, _v:any) => {
+    const setEv = (_i:number, _t:eventProps, _v:any):void => {
         let _arr:event[] = JSON.parse(JSON.stringify(events))
+        _t == 'type' ? _v == 'bgcolor' ? _arr[_i].value = '#000000' : _arr[_i].value = 100 : ''
         _arr[_i][_t] = _t == 'value' ? Number.isNaN(+_v) ? _v : +_v : _v
         setEvents(_arr)
+    }
+
+    const setObjEv = (_oi:number, _i:number, _t:objEventProps, _v:any):void => {
+        let _arr:obj[] = JSON.parse(JSON.stringify(objs))
+        if(_t == 'type'){
+            _arr[_oi].events[_i].value =
+            ['rotate', 'opacity'].includes(_v) ? 0 :
+            _v == 'speed' ? 100 :
+            _v == 'change' ? '' :
+            ['transform', 'scale', 'anchor'].includes(_v) ? [0, 0] :
+            _v == 'ease' ? 'linear' :
+            _v == 'visible' || ''
+        }
+        _arr[_oi].events[_i][_t] = _v
+        setObjs(_arr)
     }
 
     // 오브젝트 및 이벤트 선택 & 삭제 & 해제 & 수정
@@ -496,18 +512,60 @@ export default function Page(){
             <div style={{width:`${100-mainsetLine-eventsetLine}%`}} className="scene"><canvas style={{backgroundColor:BackgroundColor}}></canvas></div>
             <div style={{width:`${eventsetLine}%`}} className="eventset">
                 {focusEvent[0] == 0 ? <>
-                <div>TimeStamp<input type="text" name="" id="" value={events[focusEvent[1]].stamp} onChange={e => setEv(focusEvent[1], 'stamp', +e.target.value)}/></div>
+                    <div>TimeStamp<input type="text" name="" id="" value={events[focusEvent[1]].stamp} onChange={e => setEv(focusEvent[1], 'stamp', +e.target.value)}/></div>
                     <div>Type<select name="" id="" value={events[focusEvent[1]].type} onChange={e => setEv(focusEvent[1], 'type', e.target.value)}>
                         <option value="volume">Volume</option>
                         <option value="bgcolor">BackgroundColor</option>
                         <option value="filter">Filter</option>
                         <option value="wiggle">Wiggle</option>
                     </select></div>
-                    {['volume'].includes(events[focusEvent[1]].type) && <div>Value<input type="text" name="" id=""
+                    {['volume', 'filter', 'wiggle'].includes(events[focusEvent[1]].type) && <div>Value<input type="text" name="" id=""
                     value={events[focusEvent[1]].value} onChange={e => setEv(focusEvent[1], 'value', e.target.value)}/></div>}
+                    {['bgcolor'].includes(events[focusEvent[1]].type) && <div>Value<input type="color" name="" id=""
+                    value={events[focusEvent[1]].value} onChange={e => setEv(focusEvent[1], 'value', e.target.value)}/></div>}
+                    {['volume', 'filter', 'bgcolor', 'wiggle'].includes(events[focusEvent[1]].type) && <div>Duration<input type="number" name="" id=""
+                    value={events[focusEvent[1]].duration} onChange={e => setEv(focusEvent[1], 'duration', e.target.value)}/></div>}
+                    {['wiggle'].includes(events[focusEvent[1]].type) && <div>Wiggle Speed<input type="number" name="" id=""
+                    value={events[focusEvent[1]].speed} onChange={e => setEv(focusEvent[1], 'speed', e.target.value)}/></div>}
+                    {['wiggle'].includes(events[focusEvent[1]].type) && <div>Wiggle Smooth End<input type="checkbox" name="" id=""
+                    checked={events[focusEvent[1]].smooth} onChange={e => setEv(focusEvent[1], 'smooth', e.target.checked)}/></div>}
                 </>:
                 focusEvent[0] > 0 ? <>
-
+                    <div>TimeStamp<input type="text" name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].stamp} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'stamp', +e.target.value)}/></div>
+                    <div>Type<select name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].type} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'type', e.target.value)}>
+                        <option value="transform">Transform</option>
+                        <option value="rotate">Rotate</option>
+                        <option value="scale">Scale</option>
+                        <option value="opacity">Opacity</option>
+                        <option value="anchor">Anchor</option>
+                        <option value="speed">BPM</option>
+                        <option value="ease">Ease</option>
+                        <option value="visible">Visible</option>
+                        <option value="change">Change Image</option>
+                    </select></div>
+                    {['transform', 'rotate', 'scale', 'opacity', 'anchor', 'speed'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Duration<input type="number" name="" id=""
+                    value={objs[focusEvent[0]-1].events[focusEvent[1]].duration} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'duration', e.target.value)}/></div>}
+                    {['transform', 'rotate', 'scale', 'opacity', 'anchor', 'speed'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Ease<select name="" id=""
+                    value={objs[focusEvent[0]-1].events[focusEvent[1]].ease} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'ease', e.target.value)}>
+                        <option value="linear">Linear</option>
+                        <option value="insine">In-Sine</option>
+                        <option value="outsine">Out-Sine</option>
+                        <option value="sine">Sine</option>
+                    </select></div>}
+                    {['rotate', 'opacity', 'speed', 'change'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Value<input type="text" name="" id=""
+                    value={objs[focusEvent[0]-1].events[focusEvent[1]].value} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', e.target.value)}/></div>:
+                    ['transform', 'scale', 'anchor'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Value<input type="number" name="" id=""
+                    value={objs[focusEvent[0]-1].events[focusEvent[1]].value[0]} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', [+e.target.value, objs[focusEvent[0]-1].events[focusEvent[1]].value[1]])}/>
+                    <input type="number" name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].value[1]} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', [objs[focusEvent[0]-1].events[focusEvent[1]].value[0], +e.target.value])}/></div>:
+                    ['ease'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>EaseType<select name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].ease} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'ease', e.target.value)}>
+                        <option value="linear">Linear</option>
+                        <option value="insine">In-Sine</option>
+                        <option value="outsine">Out-Sine</option>
+                        <option value="sine">Sine</option>
+                    </select></div>:
+                    ['visible'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Visible<input type="checkbox" name="" id=""
+                    checked={objs[focusEvent[0]-1].events[focusEvent[1]].value} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', e.target.checked)}/></div>
+                    }
                 </>:<></>}
             </div>
         </div>
@@ -523,7 +581,7 @@ export default function Page(){
                 </div>
                 <div className={focusObj == 0 ? 'selected' : ''} onClick={e => {setFocusObj(0);setFocusing(0)}}>Main<button onClick={e => addEv()}>Add Event</button></div>
                 {objs.map((v, i) => (
-                    <div className={focusObj == i+1 ? 'selected' : ''} onClick={e => {setFocusObj(i+1);setFocusing(0)}}>{`Obj${i+1}`}
+                    <div key={i} className={focusObj == i+1 ? 'selected' : ''} onClick={e => {setFocusObj(i+1);setFocusing(0)}}>{`Obj${i+1}`}
                     {v.type == 'chart' && <button onClick={e => addChartNote(i)}>Add Note</button>}
                     <button onClick={e => addObjEv(i)}>Add Event</button></div>
                 ))}
@@ -553,7 +611,7 @@ export default function Page(){
                             ))}
                     </div>
                     {objs.map((v, i) => (
-                        <div style={{marginTop:`${(i+1)*25.5}px`}}>
+                        <div key={i} style={{marginTop:`${(i+1)*25.5}px`}}>
                             {v.events.map((v2, i2) => (
                                 (condset[0] /100 * (100-objLine) * v2.stamp / endpoint)*(zoom/100) + rowScroll >= 0 &&
                                 <div key={i2} style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v2.stamp / endpoint)*(zoom/100) + rowScroll - 8}px`}}

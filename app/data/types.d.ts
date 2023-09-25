@@ -7,9 +7,11 @@ export interface event{
     type:mainEvType;
     value?:any;
     duration?:number;
+    smooth?:boolean;
     ease?:ease;
+    speed?:number;
 }
-export type eventProps = 'stamp'|'type'|'value'|'duration'|'ease'
+export type eventProps = 'stamp'|'type'|'value'|'duration'|'ease'|'speed'|'smooth'
 
 export interface objEvent{
     stamp:number;
