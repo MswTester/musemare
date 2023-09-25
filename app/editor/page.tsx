@@ -538,10 +538,10 @@ export default function Page(){
                         <option value="scale">Scale</option>
                         <option value="opacity">Opacity</option>
                         <option value="anchor">Anchor</option>
-                        <option value="speed">BPM</option>
-                        <option value="ease">Ease</option>
+                        {objs[focusEvent[0]-1].type == 'chart' && <option value="speed">BPM</option>}
+                        {objs[focusEvent[0]-1].type == 'chart' && <option value="ease">Ease</option>}
                         <option value="visible">Visible</option>
-                        <option value="change">Change Image</option>
+                        {objs[focusEvent[0]-1].type == 'sprite' && <option value="change">Change Image</option>}
                     </select></div>
                     {['transform', 'rotate', 'scale', 'opacity', 'anchor', 'speed'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Duration<input type="number" name="" id=""
                     value={objs[focusEvent[0]-1].events[focusEvent[1]].duration} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'duration', e.target.value)}/></div>}
