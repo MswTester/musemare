@@ -3,6 +3,8 @@
 import { ContextType, useEffect, useState } from "react"
 import { isInRange } from "../data/utils"
 import { obj, event, level, objEvent, mainEvType, eventProps, objEventProps } from "../data/types"
+import { drawRect } from "../logic/canvasDrawer"
+import { render } from "../logic/battleEngine"
 
 const dragRange = 6
 
@@ -477,24 +479,20 @@ export default function Page(){
             }
         }
 
-        render()
-        
         document.addEventListener('keydown', keydown)
         return () => {
             document.removeEventListener('keydown', keydown)
         }
     }, [events, objs, focusEvent, focusObj, focusNote, focusing, evClipboard, timeline])
-    
-    // renderer here
-    function render(){
+
+    useEffect(() => {
         const canvas = document.querySelector('canvas') as HTMLCanvasElement
         const ctx = canvas?.getContext('2d') as CanvasRenderingContext2D
         if(ctx && canvas){
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
-            ctx.fillStyle = 'red'
-            ctx.fillRect(timeline, 100, 20, 20)
+            render(canvas, timeline, {events, objs, backgroundColor:BackgroundColor, volume})
         }
-    }
+    }, [events, objs, timeline, BackgroundColor, volume])
+
 
     return <div className="Editor">
         <div style={{height:`${100-underbarLine}%`}} className="workspace">

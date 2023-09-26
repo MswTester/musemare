@@ -2,6 +2,14 @@ export type ease = 'linear'|'insine'|'outsine'|'sine';
 export type objEvType = 'transform'|'rotate'|'scale'|'opacity'|'anchor'|'speed'|'ease'|'visible'|'change';
 export type mainEvType = 'volume'|'bgcolor'|'filter'|'wiggle';
 
+export type drawer = 'fill'|'stroke'
+export type renderVar = {
+    events:event[];
+    objs:obj[];
+    backgroundColor:string;
+    volume:number;
+}
+
 export interface event{
     stamp:number;
     type:mainEvType;
