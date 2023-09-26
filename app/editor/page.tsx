@@ -3,7 +3,6 @@
 import { ContextType, useEffect, useState } from "react"
 import { isInRange } from "../data/utils"
 import { obj, event, level, objEvent, mainEvType, eventProps, objEventProps } from "../data/types"
-import { drawRect } from "../logic/canvasDrawer"
 import { render } from "../logic/battleEngine"
 
 const dragRange = 6
@@ -17,6 +16,7 @@ export default function Page(){
     const [objLine, setObjLine] = useState<number>(20)
     const [condset, setCondset] = useState<number[]>([0, 0])
     const [rowScroll, setRowScroll] = useState<number>(0)
+    const [colScroll, setColScroll] = useState<number>(0)
 
     // default settings
     const [bpm, setBpm] = useState<number>(100)
@@ -147,6 +147,7 @@ export default function Page(){
         }
     }, [])
     
+    // new 눌렀을때 리셋
     const reset = () => {
         setGrid(4)
         setBpm(100)
@@ -158,9 +159,15 @@ export default function Page(){
         setPlaying(false)
         setZoom(100)
         setRowScroll(0)
+        setColScroll(0)
         v_setTimeline(0)
         setEvents([])
         setObjs([])
+        setEvClipboard(undefined)
+        setFocusEvent([-1, 0])
+        setFocusing(0)
+        setFocusNote([-1, 0])
+        setFocusObj(0)
         v_playing = false
         v_zoom = 0
     }
@@ -177,7 +184,6 @@ export default function Page(){
 
                 reader.onload = (event) => {
                     const level = JSON.parse(event.target?.result as string) as level;
-                    console.log(level);
 
                     // statement 적용
                     setBpm(level.bpm)
@@ -196,7 +202,12 @@ export default function Page(){
     }
 
     const exportLevel = () => {
-
+        const _a = document.createElement('a') as HTMLAnchorElement
+        let _obj:level = {bpm, events, endpoint, objs, offset, song, volume, backgroundColor:BackgroundColor}
+        _a.download = 'level.json'
+        let _blob = new Blob([JSON.stringify(_obj)], {type:'application/json'})
+        _a.href = URL.createObjectURL(_blob)
+        _a.click()
     }
 
     async function playLevel (){
@@ -235,6 +246,7 @@ export default function Page(){
                 setPlaying(v_playing)
             }
         }, 1)
+        // 마우스 무브 이벤트
         function mousemove(e:MouseEvent){
             if(cont_dragging){
                 let res:number = (endpoint * (e.clientX-rowScroll - innerWidth/100*objLine) / (innerWidth/100*(100-objLine)))/(zoom/100)
@@ -246,13 +258,15 @@ export default function Page(){
                 }
                 v_setTimeline(res < 0 ? 0 : res > endpoint ? endpoint : res)
             } else if(scrow_dragging) {
-                // scroll logic
+                // scroll logic 드래그 기능이라 무필요
             }
         }
+        // 마우스 업 이벤트
         function mouseup(e:MouseEvent){
             cont_dragging = false
             scrow_dragging = false
         }
+        // 타임라인 컨트롤바 마우스 다운 감지
         function controls_mousedown(e:MouseEvent){
             if(!Dragging){
                 cont_dragging = true
@@ -260,6 +274,7 @@ export default function Page(){
                 mousemove(e)
             }
         }
+        // 타임라인 스크롤바 마우스 다운 감지
         function scrowbar_mousedown(e:MouseEvent){
             if(!Dragging){
                 scrow_dragging = true
@@ -267,8 +282,9 @@ export default function Page(){
                 mousemove(e)
             }
         }
+        // 타임라인 밑 배생 관련 키 다운
         const keydown = (e:KeyboardEvent) => {
-            let isNumlock = e.getModifierState('NumLock')
+            let isNumlock = e.getModifierState('NumLock') // 넘패드 Home, 넘패드 End 를 감지하기 위한 넘버락 확인불른
             // console.log(e.code)
             if(e.code == 'Space'){
                 playLevel()
@@ -294,11 +310,13 @@ export default function Page(){
         }
     }, [endpoint, playing, offset, objLine, zoom, gridLine, rowScroll])
 
+    // state volume변경시 실제 오디오 볼륨을 변경하는 코드
     useEffect(() => {
         const audio = document.querySelector('audio') as HTMLAudioElement
         audio.volume = volume/100
     }, [volume])
 
+    // bpm, grid, endpoint값에 따라 그리드 리스트를 만드는 코드
     useEffect(() => {
         let c = (60/bpm/grid)
         let arr = []
@@ -309,8 +327,10 @@ export default function Page(){
         setGridLine(arr)
     }, [bpm, grid, endpoint])
 
+    // 휠버튼으로 타임라인 이동하는 코드
     useEffect(() => {
-        const ev = document.querySelector('.timeline') as HTMLDivElement
+        const ev = document.querySelector('.timeline') as HTMLDivElement // 타임라인 이벤트 엘레멘트
+        // 휠 이벤트
         function wheelev(e:WheelEvent){
             if(!e.altKey){
                 let res = rowScroll-e.deltaY
@@ -323,10 +343,26 @@ export default function Page(){
         }
     }, [rowScroll])
 
-    
+    // 휠버튼으로 오브젝트 스크롤 이동하는 코드
+    useEffect(() => {
+        const ob = document.querySelector('.objs') as HTMLDivElement // 타임라인 이벤트 엘레멘트
+        // 휠 이벤트
+        function wheelev(e:WheelEvent){
+            if(!e.altKey){
+                let res = colScroll+(e.deltaY >= 0 ? 1 : -1)
+                setColScroll(res <= 0 ? 0 : res)
+            }
+        }
+        ob.addEventListener('wheel', wheelev)
+        return () => {
+            ob.removeEventListener('wheel', wheelev)
+        }
+    }, [colScroll])
+
+    // 오브젝트 추가 함수
     const addObj = () => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
-        let _obj:obj = {anchor:[0, 0],events:[],opacity:1,position:[50, 50],rotate:0,scale:[1, 1],type:sel}
+        let _obj:obj = {anchor:[0, 0],events:[],opacity:1,position:[50, 50],rotate:0,scale:[1, 1],type:sel,visible:true}
         if(sel == "chart"){
             _obj['bpm'] = bpm
             _obj['ease'] = 'linear'
@@ -338,21 +374,24 @@ export default function Page(){
         setObjs(_arr)
     }
 
+    // 오브젝트 제거 함수
     const remObj = (_i:number) => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
         _arr.splice(_i, 1)
         setObjs(_arr)
     }
     
+    // 메인 이벤트 추가 함수
     const addEv = (_opt?:event) => {
         let _arr:event[] = JSON.parse(JSON.stringify(events))
         let _d = _opt
         _d ? _d.stamp = timeline : _d
-        _arr.push(_d || {stamp:timeline, type:'volume', value:100, duration:60/bpm, ease:'linear', smooth:true, speed:10})
+        _arr.push(_d || {stamp:timeline, type:'bgcolor', value:'#000000', duration:bpm, ease:'linear', smooth:true, speed:10})
         _arr = _arr.sort((_a, _b) => _a.stamp - _b.stamp)
         setEvents(_arr)
     }
     
+    // 메인 이벤트 제거 함수
     const remEv = (_idx:number) => {
         let _arr:event[] = JSON.parse(JSON.stringify(events))
         _arr.splice(_idx, 1)
@@ -360,15 +399,17 @@ export default function Page(){
         setEvents(_arr)
     }
     
+    // 오브젝트 이벤트 추가 함수
     const addObjEv = (_i:number, _opt?:objEvent) => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
         let _d = _opt
         _d ? _d.stamp = timeline : _d
-        _arr[_i].events.push(_d || {stamp:timeline, type:'transform', value:[50, 50], ease:'linear', duration:60/bpm})
+        _arr[_i].events.push(_d || {stamp:timeline, type:'position', value:[50, 50], ease:'linear', duration:bpm})
         _arr[_i].events = _arr[_i].events.sort((_a, _b) => _a.stamp - _b.stamp)
         setObjs(_arr)
     }
 
+    // 오브젝트 이벤트 제거 함수
     const remObjEv = (_oi:number, _i:number) => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
         _arr[_oi].events.splice(_i, 1)
@@ -376,6 +417,7 @@ export default function Page(){
         setObjs(_arr)
     }
     
+    // 차트 노트 추가 함수
     const addChartNote = (_i:number) => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
         _arr[_i].notes?.push(timeline)
@@ -383,6 +425,7 @@ export default function Page(){
         setObjs(_arr)
     }
 
+    // 차트 노트 제거 함수
     const remChartNote = (_oi:number, _i:number) => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
         _arr[_oi].notes?.splice(_i, 1)
@@ -390,6 +433,7 @@ export default function Page(){
         setObjs(_arr)
     }
 
+    // 오브젝트 속성 설정 함수
     const setObjProperty = (_i:number, _type:string, _v:any) => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
         if(_type == 'position'){
@@ -408,6 +452,7 @@ export default function Page(){
         setObjs(_arr)
     }
 
+    // 메인 이벤트 설정 함수
     const setEv = (_i:number, _t:eventProps, _v:any):void => {
         let _arr:event[] = JSON.parse(JSON.stringify(events))
         _t == 'type' ? _v == 'bgcolor' ? _arr[_i].value = '#000000' : _arr[_i].value = 100 : ''
@@ -415,14 +460,15 @@ export default function Page(){
         setEvents(_arr)
     }
 
+    // 오브젝트 이벤트 설정 함수
     const setObjEv = (_oi:number, _i:number, _t:objEventProps, _v:any):void => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
         if(_t == 'type'){
             _arr[_oi].events[_i].value =
             ['rotate', 'opacity'].includes(_v) ? 0 :
-            _v == 'speed' ? 100 :
+            _v == 'bpm' ? 100 :
             _v == 'change' ? '' :
-            ['transform', 'scale', 'anchor'].includes(_v) ? [0, 0] :
+            ['position', 'scale', 'anchor'].includes(_v) ? [0, 0] :
             _v == 'ease' ? 'linear' :
             _v == 'visible' || ''
         }
@@ -432,12 +478,15 @@ export default function Page(){
 
     // 오브젝트 및 이벤트 선택 & 삭제 & 해제 & 수정
     useEffect(() => {
+        // 글로벌 키다운 이벤트
         function keydown(e:KeyboardEvent){
             // 옵젝 & 이벤트 삭제
             if(e.code == 'Delete'){
                 if(focusing == 0){
                     if(focusObj != 0){
                         remObj(focusObj-1)
+                        if(focusEvent[0]+1 >= focusObj) setFocusEvent([-1, 0])
+                        if(focusNote[0] >= focusObj) setFocusNote([-1, 0])
                         setFocusObj(0)
                     }
                 } else if(focusing == 1){
@@ -452,6 +501,7 @@ export default function Page(){
                     remChartNote(...focusNote)
                     setFocusNote([-1, 0])
                 }
+            // 이벤트 포커징 옮기는 코드
             } else if(e.code == 'ArrowLeft' || e.code == 'ArrowRight'){
                 if(focusing == 1 && focusEvent[0] > -1){
                     let _evLen:number = focusEvent[0] == 0 ? events.length : objs[focusEvent[0]-1].events.length
@@ -466,16 +516,31 @@ export default function Page(){
                     _idx = _idx < 0 ? 0 : _idx+1 > _ntLen ? _ntLen-1 : _idx
                     setFocusNote([focusNote[0], _idx])
                 }
-            } else if((e.code == 'KeyC' || e.code == 'KeyX') && e.ctrlKey){
-                let cb:event | objEvent = JSON.parse(JSON.stringify(focusEvent[0] == 0 ? events[focusEvent[1]] : objs[focusEvent[0]-1].events[focusEvent[1]]))
-                if(e.code == 'KeyX') {
-                    focusEvent[0] == 0 ? remEv(focusEvent[1]) : remObjEv(focusEvent[0]-1, focusEvent[1])
-                    setFocusEvent([-1, 0])
+            // 이벤트 복사, 자르기, 붙여넣기 코드
+            } else if((e.code == 'KeyC' || e.code == 'KeyX') && e.ctrlKey){ // 복사 & 자르기
+                if(focusEvent[0] != -1){
+                    let cb:event | objEvent = JSON.parse(JSON.stringify(focusEvent[0] == 0 ? events[focusEvent[1]] : objs[focusEvent[0]-1].events[focusEvent[1]]))
+                    if(e.code == 'KeyX') {
+                        focusEvent[0] == 0 ? remEv(focusEvent[1]) : remObjEv(focusEvent[0]-1, focusEvent[1])
+                        setFocusEvent([-1, 0])
+                    }
+                    setEvClipboard(cb)
                 }
-                setEvClipboard(cb)
-        } else if(e.code == 'KeyV' && e.ctrlKey){
-                let isCbMainEv:boolean = (evClipboard as event).speed == undefined ? false : true
-                focusObj == 0 ? isCbMainEv && addEv(evClipboard as event) : !isCbMainEv && addObjEv(focusObj-1, evClipboard as objEvent)
+            } else if(e.code == 'KeyV' && e.ctrlKey){ // 붙여넣기
+                if(evClipboard){
+                    let isCbMainEv:boolean = (evClipboard as event).speed == undefined ? false : true
+                    focusObj == 0 ? isCbMainEv && addEv(evClipboard as event) : !isCbMainEv && addObjEv(focusObj-1, evClipboard as objEvent)
+                }
+            } else if(e.code == 'KeyW'){
+                if(focusObj > 0 && objs[focusObj-1].type == 'chart'){
+                    addChartNote(focusObj-1)
+                }
+            } else if(e.code == 'KeyE'){
+                if(focusObj == 0){
+                    addEv()
+                } else if(focusObj > 0){
+                    addObjEv(focusObj-1)
+                }
             }
         }
 
@@ -485,15 +550,13 @@ export default function Page(){
         }
     }, [events, objs, focusEvent, focusObj, focusNote, focusing, evClipboard, timeline])
 
+    // rendering 렌더링
     useEffect(() => {
         const canvas = document.querySelector('canvas') as HTMLCanvasElement
-        const ctx = canvas?.getContext('2d') as CanvasRenderingContext2D
-        if(ctx && canvas){
-            render(canvas, timeline, {events, objs, backgroundColor:BackgroundColor, volume})
-        }
-    }, [events, objs, timeline, BackgroundColor, volume])
+        if(canvas){render(canvas, timeline, {events, objs, backgroundColor:BackgroundColor})}
+    }, [events, objs, timeline, BackgroundColor])
 
-
+    // html 코드
     return <div className="Editor">
         <div style={{height:`${100-underbarLine}%`}} className="workspace">
             <div style={{width:`${mainsetLine}%`}} className="mainset">
@@ -530,6 +593,7 @@ export default function Page(){
                         <div>Opacity<input type="number" name="" id="" value={objs[focusObj-1].opacity} onChange={e => setObjProperty(focusObj-1, 'opacity', +e.target.value)}/></div>
                         <div>Anchor<input type="number" name="" id="" value={objs[focusObj-1].anchor[0]} onChange={e => setObjProperty(focusObj-1, 'anchor', [0, +e.target.value])}/>
                         <input type="number" name="" id="" value={objs[focusObj-1].anchor[1]} onChange={e => setObjProperty(focusObj-1, 'anchor', [1, +e.target.value])}/></div>
+                        <div>Visible<input type="checkbox" name="" id="" checked={objs[focusObj-1].visible} onChange={e => setObjProperty(focusObj-1, 'visible', e.target.checked)}/></div>
                         {objs[focusObj-1].type == 'chart' && <div>BPM<input type="number" name="" id="" value={objs[focusObj-1].bpm}
                         onChange={e => setObjProperty(focusObj-1, 'bpm', +e.target.value)}/></div>}
                         {objs[focusObj-1].type == 'chart' && <div>Ease <select name="" id="" value={objs[focusObj-1].ease}
@@ -538,6 +602,27 @@ export default function Page(){
                             <option value="insine">In-Sine</option>
                             <option value="outsine">Out-Sine</option>
                             <option value="sine">Sine</option>
+                            <option value="inquad">In-Quad</option>
+                            <option value="outquad">Out-Quad</option>
+                            <option value="quad">Quad</option>
+                            <option value="incubic">In-Cubic</option>
+                            <option value="outcubic">Out-Cubic</option>
+                            <option value="cubic">Cubic</option>
+                            <option value="inquart">In-Quart</option>
+                            <option value="outquart">Out-Quart</option>
+                            <option value="quart">Quart</option>
+                            <option value="inquint">In-Quint</option>
+                            <option value="outquint">Out-Quint</option>
+                            <option value="quint">Quint</option>
+                            <option value="inexpo">In-Expo</option>
+                            <option value="outexpo">Out-Expo</option>
+                            <option value="expo">Expo</option>
+                            <option value="incirc">In-Circ</option>
+                            <option value="outcirc">Out-Circ</option>
+                            <option value="circ">Circ</option>
+                            <option value="inback">In-Back</option>
+                            <option value="outback">Out-Back</option>
+                            <option value="back">Back</option>
                         </select></div>}
                         {objs[focusObj-1].type == 'sprite' && <div>Src<input type="text" name="" id="" value={objs[focusObj-1].src}
                         onChange={e => setObjProperty(focusObj-1, 'src', e.target.value)}/></div>}
@@ -549,47 +634,95 @@ export default function Page(){
                 {focusEvent[0] == 0 ? <>
                     <div>TimeStamp<input type="text" name="" id="" value={events[focusEvent[1]].stamp} onChange={e => setEv(focusEvent[1], 'stamp', +e.target.value)}/></div>
                     <div>Type<select name="" id="" value={events[focusEvent[1]].type} onChange={e => setEv(focusEvent[1], 'type', e.target.value)}>
-                        <option value="volume">Volume</option>
                         <option value="bgcolor">BackgroundColor</option>
                         <option value="filter">Filter</option>
                         <option value="wiggle">Wiggle</option>
                     </select></div>
-                    {['volume', 'filter', 'wiggle'].includes(events[focusEvent[1]].type) && <div>Value<input type="text" name="" id=""
+                    {['filter', 'wiggle'].includes(events[focusEvent[1]].type) && <div>Value<input type="text" name="" id=""
                     value={events[focusEvent[1]].value} onChange={e => setEv(focusEvent[1], 'value', e.target.value)}/></div>}
                     {['bgcolor'].includes(events[focusEvent[1]].type) && <div>Value<input type="color" name="" id=""
                     value={events[focusEvent[1]].value} onChange={e => setEv(focusEvent[1], 'value', e.target.value)}/></div>}
-                    {['volume', 'filter', 'bgcolor', 'wiggle'].includes(events[focusEvent[1]].type) && <div>Duration<input type="number" name="" id=""
-                    value={events[focusEvent[1]].duration} onChange={e => setEv(focusEvent[1], 'duration', e.target.value)}/></div>}
+                    {['filter', 'bgcolor', 'wiggle'].includes(events[focusEvent[1]].type) && <div>Duration<input type="number" name="" id=""
+                    value={events[focusEvent[1]].duration} onChange={e => setEv(focusEvent[1], 'duration', +e.target.value)}/></div>}
                     {['wiggle'].includes(events[focusEvent[1]].type) && <div>Wiggle Speed<input type="number" name="" id=""
                     value={events[focusEvent[1]].speed} onChange={e => setEv(focusEvent[1], 'speed', e.target.value)}/></div>}
                     {['wiggle'].includes(events[focusEvent[1]].type) && <div>Wiggle Smooth End<input type="checkbox" name="" id=""
                     checked={events[focusEvent[1]].smooth} onChange={e => setEv(focusEvent[1], 'smooth', e.target.checked)}/></div>}
+                    {['filter', 'bgcolor'].includes(events[focusEvent[1]].type) && <div>Ease<select name="" id=""
+                    value={events[focusEvent[1]].ease} onChange={e => setEv(focusEvent[1], 'ease', e.target.value)}>
+                        <option value="linear">Linear</option>
+                        <option value="insine">In-Sine</option>
+                        <option value="outsine">Out-Sine</option>
+                        <option value="sine">Sine</option>
+                        <option value="inquad">In-Quad</option>
+                        <option value="outquad">Out-Quad</option>
+                        <option value="quad">Quad</option>
+                        <option value="incubic">In-Cubic</option>
+                        <option value="outcubic">Out-Cubic</option>
+                        <option value="cubic">Cubic</option>
+                        <option value="inquart">In-Quart</option>
+                        <option value="outquart">Out-Quart</option>
+                        <option value="quart">Quart</option>
+                        <option value="inquint">In-Quint</option>
+                        <option value="outquint">Out-Quint</option>
+                        <option value="quint">Quint</option>
+                        <option value="inexpo">In-Expo</option>
+                        <option value="outexpo">Out-Expo</option>
+                        <option value="expo">Expo</option>
+                        <option value="incirc">In-Circ</option>
+                        <option value="outcirc">Out-Circ</option>
+                        <option value="circ">Circ</option>
+                        <option value="inback">In-Back</option>
+                        <option value="outback">Out-Back</option>
+                        <option value="back">Back</option>
+                    </select></div>}
                 </>:
                 focusEvent[0] > 0 ? <>
                     <div>TimeStamp<input type="text" name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].stamp} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'stamp', +e.target.value)}/></div>
                     <div>Type<select name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].type} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'type', e.target.value)}>
-                        <option value="transform">Transform</option>
+                        <option value="position">Transform</option>
                         <option value="rotate">Rotate</option>
                         <option value="scale">Scale</option>
                         <option value="opacity">Opacity</option>
                         <option value="anchor">Anchor</option>
-                        {objs[focusEvent[0]-1].type == 'chart' && <option value="speed">BPM</option>}
+                        {objs[focusEvent[0]-1].type == 'chart' && <option value="bpm">BPM</option>}
                         {objs[focusEvent[0]-1].type == 'chart' && <option value="ease">Ease</option>}
                         <option value="visible">Visible</option>
                         {objs[focusEvent[0]-1].type == 'sprite' && <option value="change">Change Image</option>}
                     </select></div>
-                    {['transform', 'rotate', 'scale', 'opacity', 'anchor', 'speed'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Duration<input type="number" name="" id=""
-                    value={objs[focusEvent[0]-1].events[focusEvent[1]].duration} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'duration', e.target.value)}/></div>}
-                    {['transform', 'rotate', 'scale', 'opacity', 'anchor', 'speed'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Ease<select name="" id=""
+                    {['position', 'rotate', 'scale', 'opacity', 'anchor', 'bpm'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Duration<input type="number" name="" id=""
+                    value={objs[focusEvent[0]-1].events[focusEvent[1]].duration} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'duration', +e.target.value)}/></div>}
+                    {['position', 'rotate', 'scale', 'opacity', 'anchor', 'bpm'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Ease<select name="" id=""
                     value={objs[focusEvent[0]-1].events[focusEvent[1]].ease} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'ease', e.target.value)}>
                         <option value="linear">Linear</option>
                         <option value="insine">In-Sine</option>
                         <option value="outsine">Out-Sine</option>
                         <option value="sine">Sine</option>
+                        <option value="inquad">In-Quad</option>
+                        <option value="outquad">Out-Quad</option>
+                        <option value="quad">Quad</option>
+                        <option value="incubic">In-Cubic</option>
+                        <option value="outcubic">Out-Cubic</option>
+                        <option value="cubic">Cubic</option>
+                        <option value="inquart">In-Quart</option>
+                        <option value="outquart">Out-Quart</option>
+                        <option value="quart">Quart</option>
+                        <option value="inquint">In-Quint</option>
+                        <option value="outquint">Out-Quint</option>
+                        <option value="quint">Quint</option>
+                        <option value="inexpo">In-Expo</option>
+                        <option value="outexpo">Out-Expo</option>
+                        <option value="expo">Expo</option>
+                        <option value="incirc">In-Circ</option>
+                        <option value="outcirc">Out-Circ</option>
+                        <option value="circ">Circ</option>
+                        <option value="inback">In-Back</option>
+                        <option value="outback">Out-Back</option>
+                        <option value="back">Back</option>
                     </select></div>}
-                    {['rotate', 'opacity', 'speed', 'change'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Value<input type="text" name="" id=""
+                    {['rotate', 'opacity', 'bpm', 'change'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Value<input type="text" name="" id=""
                     value={objs[focusEvent[0]-1].events[focusEvent[1]].value} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', e.target.value)}/></div>:
-                    ['transform', 'scale', 'anchor'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Value<input type="number" name="" id=""
+                    ['position', 'scale', 'anchor'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Value<input type="number" name="" id=""
                     value={objs[focusEvent[0]-1].events[focusEvent[1]].value[0]} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', [+e.target.value, objs[focusEvent[0]-1].events[focusEvent[1]].value[1]])}/>
                     <input type="number" name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].value[1]} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', [objs[focusEvent[0]-1].events[focusEvent[1]].value[0], +e.target.value])}/></div>:
                     ['ease'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>EaseType<select name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].ease} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'ease', e.target.value)}>
@@ -597,6 +730,27 @@ export default function Page(){
                         <option value="insine">In-Sine</option>
                         <option value="outsine">Out-Sine</option>
                         <option value="sine">Sine</option>
+                        <option value="inquad">In-Quad</option>
+                        <option value="outquad">Out-Quad</option>
+                        <option value="quad">Quad</option>
+                        <option value="incubic">In-Cubic</option>
+                        <option value="outcubic">Out-Cubic</option>
+                        <option value="cubic">Cubic</option>
+                        <option value="inquart">In-Quart</option>
+                        <option value="outquart">Out-Quart</option>
+                        <option value="quart">Quart</option>
+                        <option value="inquint">In-Quint</option>
+                        <option value="outquint">Out-Quint</option>
+                        <option value="quint">Quint</option>
+                        <option value="inexpo">In-Expo</option>
+                        <option value="outexpo">Out-Expo</option>
+                        <option value="expo">Expo</option>
+                        <option value="incirc">In-Circ</option>
+                        <option value="outcirc">Out-Circ</option>
+                        <option value="circ">Circ</option>
+                        <option value="inback">In-Back</option>
+                        <option value="outback">Out-Back</option>
+                        <option value="back">Back</option>
                     </select></div>:
                     ['visible'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Visible<input type="checkbox" name="" id=""
                     checked={objs[focusEvent[0]-1].events[focusEvent[1]].value} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', e.target.checked)}/></div>
@@ -614,9 +768,9 @@ export default function Page(){
                     </select>
                     <button onClick={e => addObj()}>+</button></div>
                 </div>
-                <div className={focusObj == 0 ? 'selected' : ''} onClick={e => {setFocusObj(0);setFocusing(0)}}>Main<button onClick={e => addEv()}>Add Event</button></div>
+                {colScroll <= 0 && <div className={focusObj == 0 ? 'selected' : ''} onClick={e => {setFocusObj(0);setFocusing(0)}}>Main<button onClick={e => addEv()}>Add Event</button></div>}
                 {objs.map((v, i) => (
-                    <div key={i} className={focusObj == i+1 ? 'selected' : ''} onClick={e => {setFocusObj(i+1);setFocusing(0)}}>{`Obj${i+1}`}
+                    colScroll <= i+1 && <div key={i} className={focusObj == i+1 ? 'selected' : ''} onClick={e => {setFocusObj(i+1);setFocusing(0)}}>{`Obj${i+1}`}
                     {v.type == 'chart' && <button onClick={e => addChartNote(i)}>Add Note</button>}
                     <button onClick={e => addObjEv(i)}>Add Event</button></div>
                 ))}
@@ -637,16 +791,16 @@ export default function Page(){
                     <div className="bar" style={{marginLeft:`${(condset[0] /100 * (100-objLine) * timeline / endpoint)*(zoom/100) + rowScroll}px`}}></div>
                 </div>
                 <div className="events">
-                    <div>
+                    {colScroll <= 0 && <div>
                         {events.map((v, i) => (
                             (condset[0] /100 * (100-objLine) * v.stamp / endpoint)*(zoom/100) + rowScroll >= 0 &&
                             <div key={i} style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v.stamp / endpoint)*(zoom/100) + rowScroll - 8}px`}}
                             className={`box ${focusEvent[0] == 0 && focusEvent[1] == i ? 'selected' : ''}`}
                             onClick={e => {setFocusEvent([0, i]);setFocusing(1)}}></div>
                             ))}
-                    </div>
+                    </div>}
                     {objs.map((v, i) => (
-                        <div key={i} style={{marginTop:`${(i+1)*25.5}px`}}>
+                        colScroll <= i+1 && <div key={i} style={{marginTop:`${(i+1-colScroll)*25.5}px`}}>
                             {v.events.map((v2, i2) => (
                                 (condset[0] /100 * (100-objLine) * v2.stamp / endpoint)*(zoom/100) + rowScroll >= 0 &&
                                 <div key={i2} style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v2.stamp / endpoint)*(zoom/100) + rowScroll - 8}px`}}

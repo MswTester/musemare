@@ -1,13 +1,12 @@
-export type ease = 'linear'|'insine'|'outsine'|'sine';
-export type objEvType = 'transform'|'rotate'|'scale'|'opacity'|'anchor'|'speed'|'ease'|'visible'|'change';
-export type mainEvType = 'volume'|'bgcolor'|'filter'|'wiggle';
+export type ease = 'linear'|'insine'|'outsine'|'sine'|'inquad'|'outquad'|'quad'|'incubic'|'outcubic'|'cubic'|'inquart'|'outquart'|'quart'|'inquint'|'outquint'|'quint'|'inexpo'|'outexpo'|'expo'|'incirc'|'outcirc'|'circ'|'inback'|'outback'|'back';
+export type objEvType = 'position'|'rotate'|'scale'|'opacity'|'anchor'|'bpm'|'ease'|'visible'|'change';
+export type mainEvType = 'bgcolor'|'filter'|'wiggle';
 
 export type drawer = 'fill'|'stroke'
 export type renderVar = {
     events:event[];
     objs:obj[];
     backgroundColor:string;
-    volume:number;
 }
 
 export interface event{
@@ -35,13 +34,14 @@ export interface obj{
     bpm?:number; // speed bpm
     notes?:number[]; // notes' timestamps(s)
     src?:string;
-    position:number[];
+    position:[number, number];
     rotate:number;
-    scale:number[];
+    scale:[number, number];
     opacity:number;
-    anchor:number[];
+    anchor:[number, number];
     events:objEvent[];
     ease?:ease;
+    visible:boolean;
 }
 export type objProps = 'type'|'bpm'|'notes'|'src'|'position'|'rotate'|'scale'|'opacity'|'anchor'|'events'|'ease'
 
