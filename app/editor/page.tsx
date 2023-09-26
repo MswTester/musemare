@@ -36,7 +36,8 @@ export default function Page(){
     const [focusEvent, setFocusEvent] = useState<[number, number]>([-1, 0]) // 0 = main | other = obj's idx, index
     const [focusNote, setFocusNote] = useState<[number, number]>([-1, 0]) // obj's idx, index
     const [focusObj, setFocusObj] = useState<number>(0)
-    const [focusing, setFocusing] = useState(0) // 0 = obj, 1 = event, 2 = note
+    const [focusing, setFocusing] = useState<number>(0) // 0 = obj, 1 = event, 2 = note
+    const [evClipboard, setEvClipboard] = useState<event|objEvent>()
 
     let v_playing:boolean = false, v_zoom:number = 100, v_timeline = 0
     
@@ -52,9 +53,7 @@ export default function Page(){
         setLang(navigator.language)
         setCondset([innerWidth, innerHeight])
 
-        // canvas
         const canvas = document.querySelector('canvas') as HTMLCanvasElement
-        const ctx = canvas.getContext('2d')
         
         function resizeCanvas(){
             setCondset([innerWidth, innerHeight])
@@ -63,16 +62,6 @@ export default function Page(){
         }
         window.onresize = resizeCanvas
         resizeCanvas()
-        
-        function loop(){
-            if(ctx){
-                ctx.clearRect(0, 0, canvas.width, canvas.height)
-                ctx.fillStyle = 'red'
-                ctx.fillRect(100, 100, 20, 20)
-            }
-            requestAnimationFrame(loop)
-        }
-        loop()
 
         function keydown(e:KeyboardEvent){
             if(e.altKey){
@@ -353,39 +342,49 @@ export default function Page(){
         setObjs(_arr)
     }
     
-    const addEv = () => {
+    const addEv = (_opt?:event) => {
         let _arr:event[] = JSON.parse(JSON.stringify(events))
-        _arr.push({stamp:timeline, type:'volume', value:100, duration:60/bpm, ease:'linear', smooth:true, speed:10})
+        let _d = _opt
+        _d ? _d.stamp = timeline : _d
+        _arr.push(_d || {stamp:timeline, type:'volume', value:100, duration:60/bpm, ease:'linear', smooth:true, speed:10})
+        _arr = _arr.sort((_a, _b) => _a.stamp - _b.stamp)
         setEvents(_arr)
     }
     
     const remEv = (_idx:number) => {
         let _arr:event[] = JSON.parse(JSON.stringify(events))
         _arr.splice(_idx, 1)
+        _arr = _arr.sort((_a, _b) => _a.stamp - _b.stamp)
         setEvents(_arr)
     }
     
-    const addObjEv = (_i:number) => {
+    const addObjEv = (_i:number, _opt?:objEvent) => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
-        _arr[_i].events.push({stamp:timeline, type:'transform', value:[50, 50], ease:'linear', duration:60/bpm})
+        let _d = _opt
+        _d ? _d.stamp = timeline : _d
+        _arr[_i].events.push(_d || {stamp:timeline, type:'transform', value:[50, 50], ease:'linear', duration:60/bpm})
+        _arr[_i].events = _arr[_i].events.sort((_a, _b) => _a.stamp - _b.stamp)
         setObjs(_arr)
     }
 
     const remObjEv = (_oi:number, _i:number) => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
         _arr[_oi].events.splice(_i, 1)
+        _arr[_oi].events = _arr[_oi].events.sort((_a, _b) => _a.stamp - _b.stamp)
         setObjs(_arr)
     }
     
     const addChartNote = (_i:number) => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
         _arr[_i].notes?.push(timeline)
+        _arr[_i].notes = _arr[_i].notes?.sort((_a, _b) => _a - _b)
         setObjs(_arr)
     }
 
     const remChartNote = (_oi:number, _i:number) => {
         let _arr:obj[] = JSON.parse(JSON.stringify(objs))
         _arr[_oi].notes?.splice(_i, 1)
+        _arr[_oi].notes = _arr[_oi].notes?.sort((_a, _b) => _a - _b)
         setObjs(_arr)
     }
 
@@ -451,14 +450,52 @@ export default function Page(){
                     remChartNote(...focusNote)
                     setFocusNote([-1, 0])
                 }
+            } else if(e.code == 'ArrowLeft' || e.code == 'ArrowRight'){
+                if(focusing == 1 && focusEvent[0] > -1){
+                    let _evLen:number = focusEvent[0] == 0 ? events.length : objs[focusEvent[0]-1].events.length
+                    let _idx:number = focusEvent[1]
+                    _idx += e.code == 'ArrowLeft' ? -1 : 1
+                    _idx = _idx < 0 ? 0 : _idx+1 > _evLen ? _evLen-1 : _idx
+                    setFocusEvent([focusEvent[0], _idx])
+                } else if(focusing == 2 && focusNote[0] > -1){
+                    let _ntLen:number = objs[focusNote[0]].notes?.length || 0
+                    let _idx:number = focusNote[1]
+                    _idx += e.code == 'ArrowLeft' ? -1 : 1
+                    _idx = _idx < 0 ? 0 : _idx+1 > _ntLen ? _ntLen-1 : _idx
+                    setFocusNote([focusNote[0], _idx])
+                }
+            } else if((e.code == 'KeyC' || e.code == 'KeyX') && e.ctrlKey){
+                let cb:event | objEvent = JSON.parse(JSON.stringify(focusEvent[0] == 0 ? events[focusEvent[1]] : objs[focusEvent[0]-1].events[focusEvent[1]]))
+                if(e.code == 'KeyX') {
+                    focusEvent[0] == 0 ? remEv(focusEvent[1]) : remObjEv(focusEvent[0]-1, focusEvent[1])
+                    setFocusEvent([-1, 0])
+                }
+                setEvClipboard(cb)
+        } else if(e.code == 'KeyV' && e.ctrlKey){
+                let isCbMainEv:boolean = (evClipboard as event).speed == undefined ? false : true
+                focusObj == 0 ? isCbMainEv && addEv(evClipboard as event) : !isCbMainEv && addObjEv(focusObj-1, evClipboard as objEvent)
             }
         }
+
+        render()
+        
         document.addEventListener('keydown', keydown)
         return () => {
             document.removeEventListener('keydown', keydown)
         }
-    }, [events, objs, focusEvent, focusObj, focusNote, focusing])
+    }, [events, objs, focusEvent, focusObj, focusNote, focusing, evClipboard, timeline])
     
+    // renderer here
+    function render(){
+        const canvas = document.querySelector('canvas') as HTMLCanvasElement
+        const ctx = canvas?.getContext('2d') as CanvasRenderingContext2D
+        if(ctx && canvas){
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            ctx.fillStyle = 'red'
+            ctx.fillRect(timeline, 100, 20, 20)
+        }
+    }
+
     return <div className="Editor">
         <div style={{height:`${100-underbarLine}%`}} className="workspace">
             <div style={{width:`${mainsetLine}%`}} className="mainset">
