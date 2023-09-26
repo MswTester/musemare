@@ -1,4 +1,5 @@
 import { obj, renderVar } from "../data/types"
+import { hexToRgb, rgbToHex } from "../data/utils"
 import { drawRect } from "./canvasDrawer"
 
 export function render(canvas:HTMLCanvasElement, timeline:number, renderVar:renderVar){
@@ -7,7 +8,16 @@ export function render(canvas:HTMLCanvasElement, timeline:number, renderVar:rend
     let base:renderVar = JSON.parse(JSON.stringify(renderVar))
     base.events.forEach((v, i) => {
         if(v.type == 'bgcolor'){
-            if(timeline >= v.stamp) base.backgroundColor = v.value
+            if(timeline >= v.stamp && v.duration == 0){base.backgroundColor = v.value}
+            else {
+                let _per:number = (timeline - v.stamp) / (v.duration as number)
+                let _bs = hexToRgb(base.backgroundColor)
+                let _nw = hexToRgb(v.value);
+                let _rs = _bs.map((_v, _i) => {
+                    return _v + _per * (_nw[_i] - _v)
+                })
+                base.backgroundColor = rgbToHex(_rs[0], _rs[1], _rs[2])
+            }
         }
     })
 

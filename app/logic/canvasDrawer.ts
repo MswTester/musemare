@@ -1,6 +1,6 @@
 import { drawer } from "../data/types"
 
-export function drawRect(canvas:HTMLCanvasElement, pos:[number, number], rot:number, scale:[number, number], opacity:number, anchor:[number, number], size:[number, number], color:string, drawer:drawer, lineWidth?:number, filter?:string):void{
+export function drawRect(canvas:HTMLCanvasElement, pos:[number, number], rot:number, scale:[number, number], opacity:number, anchor:[number, number], size:[number, number], color:string, drawer:drawer, filter?:string, lineWidth?:number):void{
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     ctx.save()
     ctx.beginPath()
@@ -20,7 +20,7 @@ export function drawRect(canvas:HTMLCanvasElement, pos:[number, number], rot:num
     ctx.restore()
 }
 
-export function drawArc(canvas:HTMLCanvasElement, pos:[number, number], rot:number, scale:[number, number], opacity:number, anchor:[number, number], radius:number, color:string, drawer:drawer, lineWidth?:number, filter?:string):void{
+export function drawArc(canvas:HTMLCanvasElement, pos:[number, number], rot:number, scale:[number, number], opacity:number, anchor:[number, number], radius:number, color:string, drawer:drawer, filter?:string, lineWidth?:number):void{
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     ctx.save()
     ctx.beginPath()
