@@ -59,63 +59,41 @@ export function rgbToHex(r:number, g:number, b:number):string {
     return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
+export function copy(data:any):any{
+    return JSON.parse(JSON.stringify(data))
+}
+
 export function Easing(n:number, ease:ease):number{
     switch(ease){
-        case 'linear':
-            return n
-        case 'insine':
-            return easeInSine(n)
-        case 'outsine':
-            return easeOutSine(n)
-        case 'sine':
-            return easeInOutSine(n)
-        case 'inquad':
-            return easeInQuad(n)
-        case 'outquad':
-            return easeOutQuad(n)
-        case 'quad':
-            return easeInOutQuad(n)
-        case 'incubic':
-            return easeInCubic(n)
-        case 'outcubic':
-            return easeOutCubic(n)
-        case 'cubic':
-            return easeInOutCubic(n)
-        case 'inquart':
-            return easeInQuart(n)
-        case 'outquart':
-            return easeOutQuart(n)
-        case 'quart':
-            return easeInOutQuart(n)
-        case 'inquint':
-            return easeInQuint(n)
-        case 'outquint':
-            return easeOutQuint(n)
-        case 'quint':
-            return easeInOutQuint(n)
-        case 'inexpo':
-            return easeInExpo(n)
-        case 'outexpo':
-            return easeOutExpo(n)
-        case 'expo':
-            return easeInOutExpo(n)
-        case 'incirc':
-            return easeInCirc(n)
-        case 'outcirc':
-            return easeOutCirc(n)
-        case 'circ':
-            return easeInOutCirc(n)
-        case 'inback':
-            return easeInBack(n)
-        case 'outback':
-            return easeOutBack(n)
-        case 'back':
-            return easeInOutBack(n)
+        case 'linear': return n
+        case 'insine': return easeInSine(n)
+        case 'outsine': return easeOutSine(n)
+        case 'sine': return easeInOutSine(n)
+        case 'inquad': return easeInQuad(n)
+        case 'outquad': return easeOutQuad(n)
+        case 'quad': return easeInOutQuad(n)
+        case 'incubic': return easeInCubic(n)
+        case 'outcubic': return easeOutCubic(n)
+        case 'cubic': return easeInOutCubic(n)
+        case 'inquart': return easeInQuart(n)
+        case 'outquart': return easeOutQuart(n)
+        case 'quart': return easeInOutQuart(n)
+        case 'inquint': return easeInQuint(n)
+        case 'outquint': return easeOutQuint(n)
+        case 'quint': return easeInOutQuint(n)
+        case 'inexpo': return easeInExpo(n)
+        case 'outexpo': return easeOutExpo(n)
+        case 'expo': return easeInOutExpo(n)
+        case 'incirc': return easeInCirc(n)
+        case 'outcirc': return easeOutCirc(n)
+        case 'circ': return easeInOutCirc(n)
+        case 'inback': return easeInBack(n)
+        case 'outback': return easeOutBack(n)
+        case 'back': return easeInOutBack(n)
     }
 }
 
 export function calcEventValue(timeline:number, stamp:number, duration:number, start:number, end:number, ease?:ease){
-    console.log(timeline, stamp, duration)
     if(timeline >= stamp + +(duration)){return end}
     else {
         let _per:number = Easing((timeline - stamp) / +(duration), ease || 'linear')

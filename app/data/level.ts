@@ -10,5 +10,8 @@ export const levels:{[key:string]:level} = {
         volume:70,
         endpoint:90,
         objs:[],
+        position:[0, 0],
+        rotate:0,
+        scale:1,
     }
 }

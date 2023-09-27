@@ -90,7 +90,7 @@ export function drawImg(canvas:HTMLCanvasElement, rv:renderVar, baseOffset:boole
         baseOffset ? ctx.scale(rv.scale, rv.scale) : ''
         ctx.scale(...scale)
         ctx.globalAlpha = opacity
-        ctx.drawImage(img, rx*anchor[0], ry*anchor[1])
+        ctx.drawImage(img, rx*anchor[0]-img.width/2, ry*anchor[1]-img.height/2)
         ctx.closePath()
         ctx.restore()
     // }

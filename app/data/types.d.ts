@@ -1,6 +1,6 @@
 export type ease = 'linear'|'insine'|'outsine'|'sine'|'inquad'|'outquad'|'quad'|'incubic'|'outcubic'|'cubic'|'inquart'|'outquart'|'quart'|'inquint'|'outquint'|'quint'|'inexpo'|'outexpo'|'expo'|'incirc'|'outcirc'|'circ'|'inback'|'outback'|'back';
-export type objEvType = 'position'|'rotate'|'scale'|'opacity'|'anchor'|'bpm'|'ease'|'visible'|'change';
-export type mainEvType = 'bgcolor'|'filter'|'wiggle';
+export type objEvType = 'position'|'rotate'|'scale'|'opacity'|'anchor'|'bpm'|'ease'|'visible'|'change'|'mcolor'|'jcolor'|'ncolor'|'drawer'|'shape'|'line'|'nline';
+export type mainEvType = 'bgcolor'|'filter'|'wiggle'|'position'|'rotate'|'scale';
 
 export type drawer = 'fill'|'stroke'
 export type renderVar = {
@@ -35,16 +35,23 @@ export type objEventProps = 'stamp'|'type'|'value'|'duration'|'ease'
 export interface obj{
     type:'chart'|'sprite';
     bpm?:number; // speed bpm
-    notes?:number[]; // notes' timestamps(s)
-    src?:string;
+    notes?:number[]; // notes' timeStamps(s)
+    src?:string; // sprite's img src
     position:[number, number];
     rotate:number;
     scale:[number, number];
     opacity:number;
     anchor:[number, number];
     events:objEvent[];
-    ease?:ease;
+    ease?:ease; // note down easing
     visible:boolean;
+    mcolor?:string; // chart color
+    jcolor?:string; // chart judge block color
+    ncolor?:string; // chart note color
+    drawer?:drawer; // note's drawer
+    shape?:string; // note's shape
+    line?:number; // chart's line width
+    nline?:number; // chart's stroke note width
 }
 export type objProps = 'type'|'bpm'|'notes'|'src'|'position'|'rotate'|'scale'|'opacity'|'anchor'|'events'|'ease'
 
