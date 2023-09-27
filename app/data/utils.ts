@@ -113,3 +113,11 @@ export function calcEventColor(timeline:number, stamp:number, duration:number, s
         return rgbToHex(_rs[0], _rs[1], _rs[2])
     }
 }
+
+export function getPos(_pos:[number, number], _stage:[number, number]):[number]{
+    return _pos.map((v:number, i:number) => (v-50)/100*_stage[i]) as [number]
+}
+
+export function parseHex(hex:string){
+    return parseInt(hex.replace('#', ''), 16)
+}

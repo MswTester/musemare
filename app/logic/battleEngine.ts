@@ -1,11 +1,8 @@
-import { drawer, ease, renderVar } from "../data/types"
+import { drawer, ease, level, renderVar } from "../data/types"
 import { Easing, calcEventColor, calcEventValue} from "../data/utils"
-import { drawArc, drawImg, drawRect } from "./canvasDrawer"
 
 // rendering 함수 내보내기
-export function render(canvas:HTMLCanvasElement, timeline:number, renderVar:renderVar){
-    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+export function render(timeline:number, renderVar:renderVar){
     let base:renderVar = JSON.parse(JSON.stringify(renderVar))
 
     // main event 적용
@@ -50,31 +47,5 @@ export function render(canvas:HTMLCanvasElement, timeline:number, renderVar:rend
         })
     })
 
-    // canvas drawing
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    drawRect(canvas, base, false, [50, 50], 0, [1, 1], 1, [0, 0], [canvas.width, canvas.height], base.backgroundColor, 'fill') // background
-    base.objs.forEach((_v, _i) => {
-        if(_v.visible){
-            if(_v.type == 'chart'){ // chart drawing
-                drawRect(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, _v.anchor, [500, _v.line as number], _v.mcolor as string, 'fill')
-                drawRect(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, [-200/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], [_v.line as number, 50], _v.jcolor as string, 'fill')
-                drawRect(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, [250/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], [_v.line as number, 50], _v.mcolor as string, 'fill')
-                drawRect(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, [-250/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], [_v.line as number, 50], _v.mcolor as string, 'fill')
-                // note drawing
-                _v.notes?.forEach((_v2, _i2) => {
-                    let _timing:number = (_v2 - timeline) / (240/(_v.bpm as number))
-                    _timing = _timing <= 1 && _timing >= 0 ? Easing(_timing, _v.ease as ease) : _timing
-                    if(_timing <= 1 && _timing >= -0.1){
-                        if(_v.shape == 'rect'){
-                            drawRect(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, [(-200+450*_timing)/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], [50, 50], _v.ncolor as string, _v.drawer as drawer, '', _v.nline as number)
-                        } else {
-                            drawArc(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, [(-200+450*_timing)/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], 25, _v.ncolor as string, _v.drawer as drawer, '', _v.nline as number)
-                        }
-                    }
-                })
-            } else if(_v.type == 'sprite'){ // sprite drawing
-                drawImg(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, _v.anchor, _v.src as string)
-            }
-        }
-    })
+    return base
 }

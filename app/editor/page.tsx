@@ -1,9 +1,12 @@
 'use client'
 
-import { ContextType, FC, useEffect, useState } from "react"
-import { copy, isInRange } from "../data/utils"
-import { obj, event, level, objEvent, mainEvType, eventProps, objEventProps } from "../data/types"
+import { ContextType, FC, useCallback, useEffect, useState } from "react"
+import { Easing, copy, getPos, isInRange, parseHex } from "../data/utils"
+import { obj, event, level, objEvent, mainEvType, eventProps, objEventProps, renderVar, drawer, ease } from "../data/types"
 import { render } from "../logic/battleEngine"
+import { Stage, Container, Sprite, Graphics } from "@pixi/react"
+import * as PIXI from 'pixi.js'
+import { DotFilter, BloomFilter, GlitchFilter, GodrayFilter, GrayscaleFilter, MotionBlurFilter, PixelateFilter, ConvolutionFilter, RGBSplitFilter, ShockwaveFilter, SimpleLightmapFilter } from 'pixi-filters'
 
 const dragRange = 6
 
@@ -17,6 +20,7 @@ export default function Page(){
     const [condset, setCondset] = useState<number[]>([0, 0])
     const [rowScroll, setRowScroll] = useState<number>(0)
     const [colScroll, setColScroll] = useState<number>(0)
+    const [stageSize, setStageSize] = useState<[number, number]>([0, 0])
 
     // default settings
     const [bpm, setBpm] = useState<number>(100)
@@ -30,7 +34,7 @@ export default function Page(){
     const [position, setPosition] = useState<[number, number]>([0, 0])
     const [rotate, setRotate] = useState<number>(0)
     const [scale, setScale] = useState<number>(1)
-
+    
     // env settings
     const [grid, setGrid] = useState<number>(4)
     const [gridOffset, setGridOffset] = useState<number>(0)
@@ -44,9 +48,10 @@ export default function Page(){
     const [focusObj, setFocusObj] = useState<number>(0)
     const [focusing, setFocusing] = useState<number>(0) // 0 = obj, 1 = event, 2 = note
     const [evClipboard, setEvClipboard] = useState<event|objEvent>()
-
-    let v_playing:boolean = false, v_zoom:number = 100, v_timeline = 0
     
+    const [rendvar, setRendvar] = useState<renderVar>(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale}))
+    let v_playing:boolean = false, v_zoom:number = 100, v_timeline = 0
+
     let ubl = 30
     let msl = 20
     let esl = 20
@@ -59,12 +64,11 @@ export default function Page(){
         setLang(navigator.language)
         setCondset([innerWidth, innerHeight])
 
-        const canvas = document.querySelector('canvas') as HTMLCanvasElement
+        // const canvas = document.querySelector('canvas') as HTMLCanvasElement
         
         function resizeCanvas(){
             setCondset([innerWidth, innerHeight])
-            canvas.width = innerWidth / 100 * (100 - msl - esl)
-            canvas.height = innerHeight / 100 * (100 - ubl)
+            setStageSize([innerWidth / 100 * (100 - msl - esl), innerHeight / 100 * (100 - ubl)])
         }
         window.onresize = resizeCanvas
         resizeCanvas()
@@ -591,9 +595,38 @@ export default function Page(){
 
     // rendering 렌더링
     useEffect(() => {
-        const canvas = document.querySelector('canvas') as HTMLCanvasElement
-        if(canvas){render(canvas, timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale})}
+        setRendvar(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale}))
     }, [events, objs, timeline, BackgroundColor, position, rotate, scale])
+
+    // chart pixi drawer
+    const chartDraw = useCallback((g:PIXI.Graphics, v:obj, _tl:number) => {
+        let _mc:string = v.mcolor as string
+        let _jc:string = v.jcolor as string
+        let _nc:string = v.ncolor as string
+        let _d:drawer = v.drawer as drawer
+        let _sh:string = v.shape as string
+        let _l:number = v.line as number
+        let _nl:number = v.nline as number
+        g.clear();
+        g.beginFill(parseHex(_mc))
+        g.drawRect(-250, 1-(_l/2), 500, _l)
+        g.drawRect(-250, -25, _l, 50)
+        g.drawRect(250, -25, _l, 50)
+        g.endFill()
+        g.beginFill(parseHex(_jc))
+        g.drawRect(-200, -25, _l, 50)
+        g.endFill()
+        v.notes?.forEach((v2, i2) => {
+            let _timing:number = (v2 - _tl) / (240/(v.bpm as number))
+            _timing = _timing <= 1 && _timing >= 0 ? Easing(_timing, v.ease as ease) : _timing
+            if(_timing <= 1 && _timing >= -0.1){
+                let _x = -200+450*_timing
+                _d == 'stroke' ? g.lineStyle(_nl, parseHex(_nc)) : g.beginFill(parseHex(_nc))
+                _sh == 'arc' ? g.drawCircle(_x, 0, 25) : g.drawRect(_x-25, -25, 50, 50)
+                _d == 'fill' ? g.endFill() : false
+            }
+        })
+    }, [])
 
     // html 코드
     return <div className="Editor">
@@ -693,7 +726,17 @@ export default function Page(){
                     </>
                 }
             </div>
-            <div style={{width:`${100-mainsetLine-eventsetLine}%`}} className="scene"><canvas style={{backgroundColor:BackgroundColor}}></canvas></div>
+            <div style={{width:`${100-mainsetLine-eventsetLine}%`}} className="scene">
+                {/* qwer */}
+                <Stage width={stageSize[0]} height={stageSize[1]} options={{backgroundColor:rendvar.backgroundColor}}>
+                    <Container filters={[]} pivot={[rendvar.position[0]/100*stageSize[0], rendvar.position[1]/100*stageSize[1]]} x={stageSize[0]/2} y={stageSize[1]/2} scale={rendvar.scale} rotation={rendvar.rotate*Math.PI/180}>
+                        {rendvar.objs.map((v, i) => (
+                            v.type == 'sprite' ? <Sprite image={v.src ? v.src : "assets"} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} anchor={v.anchor.map(v => (v+50)/100) as [number]}></Sprite>:
+                            v.type == 'chart' && <Graphics draw={g => chartDraw(g, v, timeline)} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} pivot={[v.anchor[0]*5, v.anchor[1]*0.5]}/>
+                        ))}
+                    </Container>
+                </Stage>
+            </div>
             <div style={{width:`${eventsetLine}%`}} className="eventset">
                 {focusEvent[0] == 0 ? <>
                     <div>TimeStamp<input type="text" name="" id="" value={events[focusEvent[1]].stamp} onChange={e => setEv(focusEvent[1], 'stamp', +e.target.value)}/></div>
