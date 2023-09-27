@@ -27,6 +27,9 @@ export default function Page(){
     const [endpoint, setEndpoint] = useState<number>(90)
     const [events, setEvents] = useState<event[]>([])
     const [objs, setObjs] = useState<obj[]>([])
+    const [position, setPosition] = useState<[number, number]>([0, 0])
+    const [rotate, setRotate] = useState<number>(0)
+    const [scale, setScale] = useState<number>(1)
 
     // env settings
     const [grid, setGrid] = useState<number>(4)
@@ -194,6 +197,9 @@ export default function Page(){
                     setEndpoint(level.endpoint)
                     setObjs(level.objs)
                     setEvents(level.events)
+                    setPosition(level.position)
+                    setRotate(level.rotate)
+                    setScale(level.scale)
                 };
 
                 reader.readAsText(selectedFile);
@@ -203,7 +209,7 @@ export default function Page(){
 
     const exportLevel = () => {
         const _a = document.createElement('a') as HTMLAnchorElement
-        let _obj:level = {bpm, events, endpoint, objs, offset, song, volume, backgroundColor:BackgroundColor}
+        let _obj:level = {bpm, events, endpoint, objs, offset, song, volume, backgroundColor:BackgroundColor, position, rotate, scale}
         _a.download = 'level.json'
         let _blob = new Blob([JSON.stringify(_obj)], {type:'application/json'})
         _a.href = URL.createObjectURL(_blob)
@@ -349,7 +355,7 @@ export default function Page(){
         // 휠 이벤트
         function wheelev(e:WheelEvent){
             if(!e.altKey){
-                let res = colScroll+(e.deltaY >= 0 ? 1 : -1)
+                let res = colScroll+(e.deltaY/100)
                 setColScroll(res <= 0 ? 0 : res)
             }
         }
@@ -553,8 +559,8 @@ export default function Page(){
     // rendering 렌더링
     useEffect(() => {
         const canvas = document.querySelector('canvas') as HTMLCanvasElement
-        if(canvas){render(canvas, timeline, {events, objs, backgroundColor:BackgroundColor})}
-    }, [events, objs, timeline, BackgroundColor])
+        if(canvas){render(canvas, timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale})}
+    }, [events, objs, timeline, BackgroundColor, position, rotate, scale])
 
     // html 코드
     return <div className="Editor">
@@ -584,6 +590,10 @@ export default function Page(){
                             let time:number[] = e.target.value.split(':').map(v => +v)
                             setEndpoint((time[0]*60 + time[1]))
                         }}/></div>
+                        <div>Position<input type="number" name="" id="" value={position[0]} onChange={e => setPosition([+e.target.value, position[1]])}/>
+                        <input type="number" name="" id="" value={position[1]} onChange={e => setPosition([position[0], +e.target.value])}/></div>
+                        <div>Rotate<input type="number" name="" id="" value={rotate} onChange={e => setRotate(+e.target.value)}/></div>
+                        <div>Scale<input type="number" name="" id="" value={scale} onChange={e => setScale(+e.target.value)}/></div>
                     </>:<>
                         <div>Position<input type="number" name="" id="" value={objs[focusObj-1].position[0]} onChange={e => setObjProperty(focusObj-1, 'position', [0, +e.target.value])}/>
                         <input type="number" name="" id="" value={objs[focusObj-1].position[1]} onChange={e => setObjProperty(focusObj-1, 'position', [1, +e.target.value])}/></div>
@@ -768,9 +778,9 @@ export default function Page(){
                     </select>
                     <button onClick={e => addObj()}>+</button></div>
                 </div>
-                {colScroll <= 0 && <div className={focusObj == 0 ? 'selected' : ''} onClick={e => {setFocusObj(0);setFocusing(0)}}>Main<button onClick={e => addEv()}>Add Event</button></div>}
+                {Math.round(colScroll) <= 0 && <div className={focusObj == 0 ? 'selected' : ''} onClick={e => {setFocusObj(0);setFocusing(0)}}>Main<button onClick={e => addEv()}>Add Event</button></div>}
                 {objs.map((v, i) => (
-                    colScroll <= i+1 && <div key={i} className={focusObj == i+1 ? 'selected' : ''} onClick={e => {setFocusObj(i+1);setFocusing(0)}}>{`Obj${i+1}`}
+                    Math.round(colScroll) <= i+1 && <div key={i} className={focusObj == i+1 ? 'selected' : ''} onClick={e => {setFocusObj(i+1);setFocusing(0)}}>{`Obj${i+1}`}
                     {v.type == 'chart' && <button onClick={e => addChartNote(i)}>Add Note</button>}
                     <button onClick={e => addObjEv(i)}>Add Event</button></div>
                 ))}
@@ -791,7 +801,7 @@ export default function Page(){
                     <div className="bar" style={{marginLeft:`${(condset[0] /100 * (100-objLine) * timeline / endpoint)*(zoom/100) + rowScroll}px`}}></div>
                 </div>
                 <div className="events">
-                    {colScroll <= 0 && <div>
+                    {Math.round(colScroll) <= 0 && <div>
                         {events.map((v, i) => (
                             (condset[0] /100 * (100-objLine) * v.stamp / endpoint)*(zoom/100) + rowScroll >= 0 &&
                             <div key={i} style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v.stamp / endpoint)*(zoom/100) + rowScroll - 8}px`}}
@@ -800,7 +810,7 @@ export default function Page(){
                             ))}
                     </div>}
                     {objs.map((v, i) => (
-                        colScroll <= i+1 && <div key={i} style={{marginTop:`${(i+1-colScroll)*25.5}px`}}>
+                        Math.round(colScroll) <= i+1 && <div key={i} style={{marginTop:`${(i+1-Math.round(colScroll))*25.5}px`}}>
                             {v.events.map((v2, i2) => (
                                 (condset[0] /100 * (100-objLine) * v2.stamp / endpoint)*(zoom/100) + rowScroll >= 0 &&
                                 <div key={i2} style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v2.stamp / endpoint)*(zoom/100) + rowScroll - 8}px`}}

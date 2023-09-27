@@ -37,24 +37,24 @@ export function render(canvas:HTMLCanvasElement, timeline:number, renderVar:rend
 
     // canvas drawing
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    drawRect(canvas, [50, 50], 0, [1, 1], 1, [0, 0], [canvas.width, canvas.height], base.backgroundColor, 'fill') // background
+    drawRect(canvas, base, false, [50, 50], 0, [1, 1], 1, [0, 0], [canvas.width, canvas.height], base.backgroundColor, 'fill') // background
     base.objs.forEach((_v, _i) => {
         if(_v.visible){
             if(_v.type == 'chart'){ // chart drawing
-                drawRect(canvas, _v.position, _v.rotate, _v.scale, _v.opacity, _v.anchor, [500, 3], '#ffffff', 'fill')
-                drawRect(canvas, _v.position, _v.rotate, _v.scale, _v.opacity, [-200/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], [3, 50], '#0099ff', 'fill')
-                drawRect(canvas, _v.position, _v.rotate, _v.scale, _v.opacity, [250/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], [3, 50], '#ffffff', 'fill')
-                drawRect(canvas, _v.position, _v.rotate, _v.scale, _v.opacity, [-250/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], [3, 50], '#ffffff', 'fill')
+                drawRect(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, _v.anchor, [500, 3], '#ffffff', 'fill')
+                drawRect(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, [-200/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], [3, 50], '#0099ff', 'fill')
+                drawRect(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, [250/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], [3, 50], '#ffffff', 'fill')
+                drawRect(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, [-250/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], [3, 50], '#ffffff', 'fill')
                 // note drawing
                 _v.notes?.forEach((_v2, _i2) => {
                     let _timing:number = (_v2 - timeline) / (240/(_v.bpm as number))
                     _timing = _timing <= 1 && _timing >= 0 ? Easing(_timing, _v.ease as ease) : _timing
                     if(_timing <= 1 && _timing >= -0.1){
-                        drawArc(canvas, _v.position, _v.rotate, _v.scale, _v.opacity, [(-200+450*_timing)/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], 25, '#ffffff', 'stroke', '', 3)
+                        drawArc(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, [(-200+450*_timing)/(canvas.width/100)+_v.anchor[0], _v.anchor[1]], 25, '#ffffff', 'stroke', '', 3)
                     }
                 })
             } else if(_v.type == 'sprite'){ // sprite drawing
-                drawImg(canvas, _v.position, _v.rotate, _v.scale, _v.opacity, _v.anchor, _v.src as string)
+                drawImg(canvas, base, true, _v.position, _v.rotate, _v.scale, _v.opacity, _v.anchor, _v.src as string)
             }
         }
     })

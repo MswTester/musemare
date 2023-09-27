@@ -7,6 +7,9 @@ export type renderVar = {
     events:event[];
     objs:obj[];
     backgroundColor:string;
+    position:[number, number];
+    rotate:number;
+    scale:number;
 }
 
 export interface event{
@@ -52,6 +55,9 @@ export interface level{
     backgroundColor:string;
     volume:number;
     events:event[];
+    position:[number, number];
+    rotate:number;
+    scale:number;
     objs:obj[];
     endpoint:number;
 }
