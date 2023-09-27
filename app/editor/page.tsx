@@ -704,7 +704,7 @@ export default function Page(){
                     </select></div>
                     {['filter', 'wiggle'].includes(events[focusEvent[1]].type) && <div>Value<input type="text" name="" id=""
                     value={events[focusEvent[1]].value} onChange={e => setEv(focusEvent[1], 'value', e.target.value)}/></div>}
-                    {['bgcolor'].includes(events[focusEvent[1]].type) && <div>Value<input type="color" name="" id=""
+                    {['bgcolor'].includes(events[focusEvent[1]].type) && <div>Color<input type="color" name="" id=""
                     value={events[focusEvent[1]].value} onChange={e => setEv(focusEvent[1], 'value', e.target.value)}/></div>}
                     {['filter', 'bgcolor', 'wiggle'].includes(events[focusEvent[1]].type) && <div>Duration<input type="number" name="" id=""
                     value={events[focusEvent[1]].duration} onChange={e => setEv(focusEvent[1], 'duration', +e.target.value)}/></div>}
