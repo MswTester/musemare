@@ -1,8 +1,8 @@
 'use client'
 
 import { ContextType, FC, useCallback, useEffect, useState } from "react"
-import { Easing, copy, getPos, isInRange, parseHex } from "../data/utils"
-import { obj, event, level, objEvent, mainEvType, eventProps, objEventProps, renderVar, drawer, ease } from "../data/types"
+import { Easing, copy, enableFilters, getPos, isInRange, parseHex, strengthFilters } from "../data/utils"
+import { obj, event, level, objEvent, mainEvType, eventProps, objEventProps, renderVar, drawer, ease, filter, filterType } from "../data/types"
 import { render } from "../logic/battleEngine"
 import { Stage, Container, Sprite, Graphics } from "@pixi/react"
 import * as PIXI from 'pixi.js'
@@ -34,6 +34,7 @@ export default function Page(){
     const [position, setPosition] = useState<[number, number]>([0, 0])
     const [rotate, setRotate] = useState<number>(0)
     const [scale, setScale] = useState<number>(1)
+    const [filters, setFilters] = useState<filter>({blur:0, dot:0, motionBlur:0, bloom:0, godray:0, convolution:0, glitch:0, grayscale:0, noise:0, pixelate:0, rgbsplit:0})
     
     // env settings
     const [grid, setGrid] = useState<number>(4)
@@ -49,7 +50,7 @@ export default function Page(){
     const [focusing, setFocusing] = useState<number>(0) // 0 = obj, 1 = event, 2 = note
     const [evClipboard, setEvClipboard] = useState<event|objEvent>()
     
-    const [rendvar, setRendvar] = useState<renderVar>(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale}))
+    const [rendvar, setRendvar] = useState<renderVar>(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale, filters}))
     let v_playing:boolean = false, v_zoom:number = 100, v_timeline = 0
 
     let ubl = 30
@@ -214,7 +215,7 @@ export default function Page(){
 
     const exportLevel = () => {
         const _a = document.createElement('a') as HTMLAnchorElement
-        let _obj:level = {bpm, events, endpoint, objs, offset, song, volume, backgroundColor:BackgroundColor, position, rotate, scale}
+        let _obj:level = {bpm, events, endpoint, objs, offset, song, volume, backgroundColor:BackgroundColor, position, rotate, scale, filters}
         _a.download = 'level.json'
         let _blob = new Blob([JSON.stringify(_obj)], {type:'application/json'})
         _a.href = URL.createObjectURL(_blob)
@@ -266,8 +267,9 @@ export default function Page(){
                     let f = (2**(rz < 1 ? 1 : rz))
                     let gap = (gridLine[1] - gridLine[0]) * f
                     res = Math.round((res-(gridOffset%gap)) / gap) * gap + (gridOffset%gap)
+                    res < gridOffset ? res = gridOffset : false
                 }
-                v_setTimeline(res < gridOffset ? gridOffset : res > endpoint ? endpoint : res)
+                v_setTimeline(res < 0 ? 0 : res > endpoint ? endpoint : res)
             } else if(scrow_dragging) {
                 // scroll logic 드래그 기능이라 무필요
             }
@@ -403,7 +405,7 @@ export default function Page(){
         let _arr:event[] = copy(events)
         let _d = _opt
         _d ? _d.stamp = timeline : _d
-        _arr.push(_d || {stamp:timeline, type:'bgcolor', value:'#000000', duration:bpm, ease:'linear', smooth:true, speed:10})
+        _arr.push(_d || {stamp:timeline, type:'bgcolor', value:'#000000', duration:bpm, ease:'linear', smooth:true, speed:10, filter:'blur'})
         _arr = _arr.sort((_a, _b) => _a.stamp - _b.stamp)
         setEvents(_arr)
     }
@@ -472,7 +474,13 @@ export default function Page(){
     // 메인 이벤트 설정 함수
     const setEv = (_i:number, _t:eventProps, _v:any):void => {
         let _arr:event[] = copy(events)
-        _t == 'type' ? _v == 'bgcolor' ? _arr[_i].value = '#000000' : _arr[_i].value = 100 : ''
+        if(_t == 'type'){
+            if(_v == 'bgcolor'){_arr[_i].value = '#000000'}
+            else if(_v == 'filter'){_arr[_i].filter = 'blur';_arr[_i].value = 100}
+            else if(_v == 'position'){_arr[_i].value = [0, 0]}else{
+                _arr[_i].value = 100
+            }
+        }
         _arr[_i][_t] = _t == 'value' ? Number.isNaN(+_v) ? _v : +_v : _v
         setEvents(_arr)
     }
@@ -595,7 +603,8 @@ export default function Page(){
 
     // rendering 렌더링
     useEffect(() => {
-        setRendvar(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale}))
+        console.log(events[0])
+        setRendvar(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale, filters}))
     }, [events, objs, timeline, BackgroundColor, position, rotate, scale])
 
     // chart pixi drawer
@@ -620,13 +629,32 @@ export default function Page(){
             let _timing:number = (v2 - _tl) / (240/(v.bpm as number))
             _timing = _timing <= 1 && _timing >= 0 ? Easing(_timing, v.ease as ease) : _timing
             if(_timing <= 1 && _timing >= -0.1){
-                let _x = -200+450*_timing
+                let _x = -200+450*_timing + _l
                 _d == 'stroke' ? g.lineStyle(_nl, parseHex(_nc)) : g.beginFill(parseHex(_nc))
                 _sh == 'arc' ? g.drawCircle(_x, 0, 25) : g.drawRect(_x-25, -25, 50, 50)
                 _d == 'fill' ? g.endFill() : false
             }
         })
     }, [])
+
+    const createFilter = () => {
+        let _arr:PIXI.Filter[] = []
+        rendvar.filters.blur != 0 ? _arr.push(new PIXI.BlurFilter(rendvar.filters.blur)) : false
+        rendvar.filters.dot != 0 ? _arr.push(new DotFilter(rendvar.filters.dot)) : false
+        rendvar.filters.motionBlur != 0 ? _arr.push(new MotionBlurFilter([10, 10], rendvar.filters.motionBlur*5)) : false
+        rendvar.filters.bloom != 0 ? _arr.push(new BloomFilter(rendvar.filters.bloom*2)) : false
+        rendvar.filters.godray != 0 ? _arr.push(new GodrayFilter({gain:rendvar.filters.godray})) : false
+        rendvar.filters.convolution != 0 ? _arr.push(new ConvolutionFilter([rendvar.filters.convolution, rendvar.filters.convolution])) : false
+        let _gr = rendvar.filters.glitch * 5
+        let _gopt = {red:[_gr, _gr], blue:[_gr/2, -_gr/2], green:[-_gr, -_gr]}
+        rendvar.filters.glitch != 0 ? _arr.push(new GlitchFilter(_gopt)) : false
+        rendvar.filters.grayscale != 0 ? _arr.push(new GrayscaleFilter()) : false
+        rendvar.filters.noise != 0 ? _arr.push(new PIXI.NoiseFilter(rendvar.filters.noise, timeline%1)) : false
+        rendvar.filters.pixelate != 0 ? _arr.push(new PixelateFilter(rendvar.filters.pixelate*10)) : false
+        let _rr = rendvar.filters.rgbsplit * 5
+        rendvar.filters.rgbsplit != 0 ? _arr.push(new RGBSplitFilter([_rr, _rr], [_rr/2, -_rr/2], [-_rr, -_rr])) : false
+        return _arr
+    }
 
     // html 코드
     return <div className="Editor">
@@ -721,7 +749,7 @@ export default function Page(){
                             <option value="outback">Out-Back</option>
                             <option value="back">Back</option>
                         </select></div>}
-                        {objs[focusObj-1].type == 'sprite' && <div>Src<input type="text" name="" id="" value={objs[focusObj-1].src}
+                        {objs[focusObj-1].type == 'sprite' && <div>source URL<input type="text" name="" id="" value={objs[focusObj-1].src}
                         onChange={e => setObjProperty(focusObj-1, 'src', e.target.value)}/></div>}
                     </>
                 }
@@ -729,9 +757,9 @@ export default function Page(){
             <div style={{width:`${100-mainsetLine-eventsetLine}%`}} className="scene">
                 {/* qwer */}
                 <Stage width={stageSize[0]} height={stageSize[1]} options={{backgroundColor:rendvar.backgroundColor}}>
-                    <Container filters={[]} pivot={[rendvar.position[0]/100*stageSize[0], rendvar.position[1]/100*stageSize[1]]} x={stageSize[0]/2} y={stageSize[1]/2} scale={rendvar.scale} rotation={rendvar.rotate*Math.PI/180}>
+                    <Container filters={createFilter() as PIXI.Filter[]} pivot={[rendvar.position[0]/100*stageSize[0], rendvar.position[1]/100*stageSize[1]]} x={stageSize[0]/2} y={stageSize[1]/2} scale={rendvar.scale} rotation={rendvar.rotate*Math.PI/180}>
                         {rendvar.objs.map((v, i) => (
-                            v.type == 'sprite' ? <Sprite image={v.src ? v.src : "assets"} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} anchor={v.anchor.map(v => (v+50)/100) as [number]}></Sprite>:
+                            v.type == 'sprite' ? <Sprite image={v.src || "assets"} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} anchor={v.anchor.map(v => (v+50)/100) as [number]}></Sprite>:
                             v.type == 'chart' && <Graphics draw={g => chartDraw(g, v, timeline)} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} pivot={[v.anchor[0]*5, v.anchor[1]*0.5]}/>
                         ))}
                     </Container>
@@ -744,18 +772,44 @@ export default function Page(){
                         <option value="bgcolor">BackgroundColor</option>
                         <option value="filter">Filter</option>
                         <option value="wiggle">Wiggle</option>
+                        <option value="position">Position</option>
+                        <option value="rotate">Rotate</option>
+                        <option value="scale">Scale</option>
                     </select></div>
-                    {['filter', 'wiggle'].includes(events[focusEvent[1]].type) && <div>Value<input type="text" name="" id=""
+                    {['wiggle', 'rotate', 'scale'].includes(events[focusEvent[1]].type) && <div>Value<input type="text" name="" id=""
                     value={events[focusEvent[1]].value} onChange={e => setEv(focusEvent[1], 'value', e.target.value)}/></div>}
+                    {['filter'].includes(events[focusEvent[1]].type) && <div>Filter Type<select name="" id="" value={events[focusEvent[1]].filter} onChange={e => setEv(focusEvent[1], 'filter', e.target.value)}>
+                    <option value="blur">Blur</option>
+                    <option value="dot">Dot</option>
+                    <option value="motionBlur">Motion Blur</option>
+                    <option value="bloom">Bloom</option>
+                    <option value="godray">Godray</option>
+                    <option value="convolution">Convolution</option>
+                    <option value="glitch">Glitch</option>
+                    <option value="grayscale">Grayscale</option>
+                    <option value="noise">Noise</option>
+                    <option value="pixelate">Pixelate</option>
+                    <option value="rgbsplit">RGB Split</option>
+                    </select></div>}
+                    {['filter'].includes(events[focusEvent[1]].type) && strengthFilters.includes(events[focusEvent[1]].filter as filterType) &&
+                    <div>Strength<input type="number" name="" id="" value={events[focusEvent[1]].value} onChange={e => setEv(focusEvent[1], 'value', +e.target.value)}/></div>}
+                    {['filter'].includes(events[focusEvent[1]].type) &&
+                    enableFilters.includes(events[focusEvent[1]].filter as filterType) &&
+                    <div>Enable<input type="checkbox" name="" id="" checked={events[focusEvent[1]].value != 0} onChange={e => setEv(focusEvent[1], 'value', e.target.checked ? 100 : 0)}/></div>}
+                    {['position'].includes(events[focusEvent[1]].type) && <div>Value<input type="number" name="" id=""
+                    value={events[focusEvent[1]].value[0]} onChange={e => setEv(focusEvent[1], 'value', [+e.target.value, events[focusEvent[1]].value[1]])}/><input type="number" name="" id=""
+                    value={events[focusEvent[1]].value[1]} onChange={e => setEv(focusEvent[1], 'value', [events[focusEvent[1]].value[0], +e.target.value])}/></div>}
                     {['bgcolor'].includes(events[focusEvent[1]].type) && <div>Color<input type="color" name="" id=""
                     value={events[focusEvent[1]].value} onChange={e => setEv(focusEvent[1], 'value', e.target.value)}/></div>}
-                    {['filter', 'bgcolor', 'wiggle'].includes(events[focusEvent[1]].type) && <div>Duration<input type="number" name="" id=""
+                    {['filter', 'bgcolor', 'wiggle', 'position', 'rotate', 'scale'].includes(events[focusEvent[1]].type) &&
+                    (events[focusEvent[1]].type == 'filter' ? strengthFilters.includes(events[focusEvent[1]].filter as filterType) : true) && <div>Duration<input type="number" name="" id=""
                     value={events[focusEvent[1]].duration} onChange={e => setEv(focusEvent[1], 'duration', +e.target.value)}/></div>}
                     {['wiggle'].includes(events[focusEvent[1]].type) && <div>Wiggle Speed<input type="number" name="" id=""
                     value={events[focusEvent[1]].speed} onChange={e => setEv(focusEvent[1], 'speed', e.target.value)}/></div>}
                     {['wiggle'].includes(events[focusEvent[1]].type) && <div>Wiggle Smooth End<input type="checkbox" name="" id=""
                     checked={events[focusEvent[1]].smooth} onChange={e => setEv(focusEvent[1], 'smooth', e.target.checked)}/></div>}
-                    {['filter', 'bgcolor'].includes(events[focusEvent[1]].type) && <div>Ease<select name="" id=""
+                    {['filter', 'bgcolor', 'position', 'rotate', 'scale'].includes(events[focusEvent[1]].type) &&
+                    (events[focusEvent[1]].type == 'filter' ? strengthFilters.includes(events[focusEvent[1]].filter as filterType) : true) && <div>Ease<select name="" id=""
                     value={events[focusEvent[1]].ease} onChange={e => setEv(focusEvent[1], 'ease', e.target.value)}>
                         <option value="linear">Linear</option>
                         <option value="insine">In-Sine</option>

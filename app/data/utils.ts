@@ -121,3 +121,6 @@ export function getPos(_pos:[number, number], _stage:[number, number]):[number]{
 export function parseHex(hex:string){
     return parseInt(hex.replace('#', ''), 16)
 }
+
+export const strengthFilters = ['blur', 'dot', 'motionBlur', 'bloom', 'godray', 'convolution', 'glitch', 'noise', 'pixelate', 'rgbsplit']
+export const enableFilters = ['grayscale']

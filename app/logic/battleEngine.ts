@@ -1,5 +1,5 @@
-import { drawer, ease, level, renderVar } from "../data/types"
-import { Easing, calcEventColor, calcEventValue} from "../data/utils"
+import { drawer, ease, filter, filterType, level, renderVar } from "../data/types"
+import { Easing, calcEventColor, calcEventValue, enableFilters} from "../data/utils"
 
 // rendering 함수 내보내기
 export function render(timeline:number, renderVar:renderVar){
@@ -19,6 +19,15 @@ export function render(timeline:number, renderVar:renderVar){
                 let _rs:number = _n % 2 == 0 ? _st : 1 - _st
                 let _sm:number = v.smooth ? 1 - _rt/(60/(v.duration as number)) : 1
                 base.position[1] = base.position[1] + (_rs * _r * _sm * (+v.value/10))
+            } else if(v.type == 'rotate'){base.rotate = calcEventValue(timeline, v.stamp, 60/(v.duration as number), base.rotate, +v.value, v.ease)
+            } else if(v.type == 'scale'){base.scale = calcEventValue(timeline, v.stamp, 60/(v.duration as number), base.scale, +v.value, v.ease)
+            } else if(v.type == 'position'){
+                base.position[0] = calcEventValue(timeline, v.stamp, 60/(v.duration as number), base.position[0], +v.value[0], v.ease)
+                base.position[1] = calcEventValue(timeline, v.stamp, 60/(v.duration as number), base.position[1], +v.value[1], v.ease)
+            } else if(v.type == 'filter'){
+                let _f:filterType = v.filter as filterType
+                if(enableFilters.includes(_f)) return base.filters[_f] = v.value != 0 ? 1 : 0
+                base.filters[_f] = calcEventValue(timeline, v.stamp, 60/(v.duration as number), base.filters[_f], (+v.value)/100, v.ease)
             }
         }
     })

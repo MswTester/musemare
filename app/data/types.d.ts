@@ -1,7 +1,7 @@
 export type ease = 'linear'|'insine'|'outsine'|'sine'|'inquad'|'outquad'|'quad'|'incubic'|'outcubic'|'cubic'|'inquart'|'outquart'|'quart'|'inquint'|'outquint'|'quint'|'inexpo'|'outexpo'|'expo'|'incirc'|'outcirc'|'circ'|'inback'|'outback'|'back';
 export type objEvType = 'position'|'rotate'|'scale'|'opacity'|'anchor'|'bpm'|'ease'|'visible'|'change'|'mcolor'|'jcolor'|'ncolor'|'drawer'|'shape'|'line'|'nline';
 export type mainEvType = 'bgcolor'|'filter'|'wiggle'|'position'|'rotate'|'scale';
-export type filterType = 'blur'|'dot'|'motionblur'
+export type filterType = 'blur'|'dot'|'motionBlur'|'bloom'|'godray'|'convolution'|'glitch'|'grayscale'|'noise'|'pixelate'|'rgbsplit'
 
 export type drawer = 'fill'|'stroke'
 export type renderVar = {
@@ -11,22 +11,21 @@ export type renderVar = {
     position:[number, number];
     rotate:number;
     scale:number;
+    filters:filter;
 }
-/*
-blur (강도) 딱 블러 그정도
-dot (강도) 별거없음
-motion blur ([x범위, y범위], 진한정도) 동적 모션블러로 전환 필요
-bloom (강도) 얼불블룸 딱 그정도
-godray ({lacun:빛쪼개지는정도0-5, paral:한곳에서 빛나올지false, gain:뚜렷한정도0-1}) 맵전체 차지하는 범위중 되는걸로;
-convolution ([x, y], w, h) x,y둘다 0-1이 적당. w, h로 늘어지는 범위조정
-glitch (options) 별거없음
-grayscale () 흑백
-noise (noise:0-1, seed:0-1) 노이즈
-pixelate (size:[x, y]) 픽셀화
-rgbsplit ([x, y], [x, y], [x, y]) 색수차 rgb넣는데 다 따로해야됨
-*/
+
 export interface filter{
     blur:number;
+    dot:number;
+    motionBlur:number;
+    bloom:number;
+    godray:number;
+    convolution:number;
+    glitch:number;
+    grayscale:number;
+    noise:number;
+    pixelate:number;
+    rgbsplit:number;
 }
 
 export interface event{
@@ -39,7 +38,7 @@ export interface event{
     ease?:ease;
     speed?:number;
 }
-export type eventProps = 'stamp'|'type'|'value'|'duration'|'ease'|'speed'|'smooth'
+export type eventProps = 'stamp'|'type'|'value'|'duration'|'ease'|'speed'|'smooth'|'filter'
 
 export interface objEvent{
     stamp:number;
@@ -84,6 +83,7 @@ export interface level{
     rotate:number;
     scale:number;
     objs:obj[];
+    filters:filter;
     endpoint:number;
 }
 export type levelProps = 'bpm'|'offset'|'song'|'backgroundColor'|'volume'|'events'|'objs'|'endpoint'
