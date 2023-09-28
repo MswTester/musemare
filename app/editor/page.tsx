@@ -759,8 +759,8 @@ export default function Page(){
                 <Stage width={stageSize[0]} height={stageSize[1]} options={{backgroundColor:rendvar.backgroundColor}}>
                     <Container filters={createFilter() as PIXI.Filter[]} pivot={[rendvar.position[0]/100*stageSize[0], rendvar.position[1]/100*stageSize[1]]} x={stageSize[0]/2} y={stageSize[1]/2} scale={rendvar.scale} rotation={rendvar.rotate*Math.PI/180}>
                         {rendvar.objs.map((v, i) => (
-                            v.type == 'sprite' ? <Sprite image={v.src || "assets"} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} anchor={v.anchor.map(v => (v+50)/100) as [number]}></Sprite>:
-                            v.type == 'chart' && <Graphics draw={g => chartDraw(g, v, timeline)} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} pivot={[v.anchor[0]*5, v.anchor[1]*0.5]}/>
+                            v.type == 'sprite' ? <Sprite key={i} image={v.src || "assets"} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} anchor={v.anchor.map(v => (v+50)/100) as [number]}></Sprite>:
+                            v.type == 'chart' && <Graphics key={i} draw={g => chartDraw(g, v, timeline)} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} pivot={[v.anchor[0]*5, v.anchor[1]*0.5]}/>
                         ))}
                     </Container>
                 </Stage>
