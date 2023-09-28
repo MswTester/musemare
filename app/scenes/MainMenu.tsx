@@ -44,15 +44,19 @@ export default function Index(){
             setBrightness(t)
             if(t >= 1) clearInterval(loop)
         }, 1)
+    
     }, [])
 
     return <div style={{filter:`blur(${blur}px) brightness(${brightness})`}}
     className="MainMenu fullscreen blackbg">
-        <img src="assets/ui/title.svg" alt="" />
-        <div className="menu">
-            {['new game', 'continue', 'settings', 'credits'].map((v, i) => (
-                <div key={i} onClick={e => buttonInput(v)}>{toLang(lang, v)}</div>
-            ))}
+        <video src="assets/video/menubg.mp4" muted={true} autoPlay={true} loop={true}></video>
+        <div>
+            <img src="assets/ui/title.svg" alt="" />
+            <div className="menu">
+                {['new game', 'continue', 'settings', 'credits'].map((v, i) => (
+                    <div key={i} onClick={e => buttonInput(v)}>{toLang(lang, v)}</div>
+                ))}
+            </div>
         </div>
     </div>
 }

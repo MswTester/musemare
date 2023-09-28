@@ -2,13 +2,17 @@
 
 import { ContextType, FC, useCallback, useEffect, useState } from "react"
 import { Easing, copy, enableFilters, getPos, isInRange, parseHex, strengthFilters } from "../data/utils"
-import { obj, event, level, objEvent, mainEvType, eventProps, objEventProps, renderVar, drawer, ease, filter, filterType } from "../data/types"
+import { obj, event, level, objEvent, mainEvType, eventProps, objEventProps, renderVar, drawer, ease, filter, filterType, note, judge } from "../data/types"
 import { render } from "../logic/battleEngine"
-import { Stage, Container, Sprite, Graphics } from "@pixi/react"
+import { Stage, Container, Sprite, Graphics, Text } from "@pixi/react"
 import * as PIXI from 'pixi.js'
 import { DotFilter, BloomFilter, GlitchFilter, GodrayFilter, GrayscaleFilter, MotionBlurFilter, PixelateFilter, ConvolutionFilter, RGBSplitFilter, ShockwaveFilter, SimpleLightmapFilter } from 'pixi-filters'
 
+// ui 조절 드래그 범위
 const dragRange = 6
+
+// 플레이 가능한 키 등록
+const playKeys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Semicolon', 'Quote', 'Comma', 'Period', 'Slash', 'BracketLeft', 'BracketRight', 'Backslash', 'Equal', 'Minus', 'Digit0', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9']
 
 export default function Page(){
     const [lang, setLang] = useState<string>('en-US')
@@ -49,9 +53,10 @@ export default function Page(){
     const [focusObj, setFocusObj] = useState<number>(0)
     const [focusing, setFocusing] = useState<number>(0) // 0 = obj, 1 = event, 2 = note
     const [evClipboard, setEvClipboard] = useState<event|objEvent>()
+    const [hits, setHits] = useState<number[]>([])
     
-    const [rendvar, setRendvar] = useState<renderVar>(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale, filters}))
-    let v_playing:boolean = false, v_zoom:number = 100, v_timeline = 0
+    const [rendvar, setRendvar] = useState<renderVar>(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale, filters}, hits))
+    let v_playing:boolean = false, v_zoom:number = 100, v_timeline = 0 // 미등록 자연 변경 변수
 
     let ubl = 30
     let msl = 20
@@ -243,6 +248,7 @@ export default function Page(){
         setTimeline(v_timeline)
     }
 
+    // 오디오, 컨트롤바 세팅
     useEffect(() => {
         const controls = document.querySelector('.controls') as HTMLDivElement
         const scrowbar = document.querySelector('.scrollbar-row > div') as HTMLDivElement
@@ -439,8 +445,8 @@ export default function Page(){
     // 차트 노트 추가 함수
     const addChartNote = (_i:number) => {
         let _arr:obj[] = copy(objs)
-        _arr[_i].notes?.push(timeline)
-        _arr[_i].notes = _arr[_i].notes?.sort((_a, _b) => _a - _b)
+        _arr[_i].notes?.push({stamp:timeline, hit:0, judge:'none'})
+        _arr[_i].notes = _arr[_i].notes?.sort((_a, _b) => _a.stamp - _b.stamp)
         setObjs(_arr)
     }
 
@@ -448,7 +454,7 @@ export default function Page(){
     const remChartNote = (_oi:number, _i:number) => {
         let _arr:obj[] = copy(objs)
         _arr[_oi].notes?.splice(_i, 1)
-        _arr[_oi].notes = _arr[_oi].notes?.sort((_a, _b) => _a - _b)
+        _arr[_oi].notes = _arr[_oi].notes?.sort((_a, _b) => _a.stamp - _b.stamp)
         setObjs(_arr)
     }
 
@@ -603,9 +609,26 @@ export default function Page(){
 
     // rendering 렌더링
     useEffect(() => {
-        console.log(events[0])
-        setRendvar(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale, filters}))
-    }, [events, objs, timeline, BackgroundColor, position, rotate, scale])
+        setRendvar(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale, filters}, hits))
+    }, [events, objs, timeline, BackgroundColor, position, rotate, scale, hits])
+
+    // 플레이
+    useEffect(() => {
+        if(playing){
+            const keydown = (e:KeyboardEvent) => {
+                if(playKeys.includes(e.code)){
+                    let _ar:number[] = copy(hits)
+                    _ar.push(timeline)
+                    setHits(_ar)
+                }
+            }
+            document.addEventListener('keydown', keydown)
+            return () => {
+                document.removeEventListener('keydown', keydown)
+            }
+        }
+    }, [timeline, playing, hits])
+    useEffect(() => {if(!playing) setHits([])}, [playing])
 
     // chart pixi drawer
     const chartDraw = useCallback((g:PIXI.Graphics, v:obj, _tl:number) => {
@@ -618,21 +641,23 @@ export default function Page(){
         let _nl:number = v.nline as number
         g.clear();
         g.beginFill(parseHex(_mc))
-        g.drawRect(-250, 1-(_l/2), 500, _l)
-        g.drawRect(-250, -25, _l, 50)
-        g.drawRect(250, -25, _l, 50)
+        g.drawRect(-250+(_l/2), 1-(_l/2), 500, _l)
+        g.drawRect(-250+(_l/2), -25, _l, 50)
+        g.drawRect(250-(_l/2), -25, _l, 50)
         g.endFill()
         g.beginFill(parseHex(_jc))
-        g.drawRect(-200, -25, _l, 50)
+        g.drawRect(-200+(_l/2), -25, _l, 50)
         g.endFill()
         v.notes?.forEach((v2, i2) => {
-            let _timing:number = (v2 - _tl) / (240/(v.bpm as number))
-            _timing = _timing <= 1 && _timing >= 0 ? Easing(_timing, v.ease as ease) : _timing
-            if(_timing <= 1 && _timing >= -0.1){
-                let _x = -200+450*_timing + _l
-                _d == 'stroke' ? g.lineStyle(_nl, parseHex(_nc)) : g.beginFill(parseHex(_nc))
-                _sh == 'arc' ? g.drawCircle(_x, 0, 25) : g.drawRect(_x-25, -25, 50, 50)
-                _d == 'fill' ? g.endFill() : false
+            if(v2.judge == 'none'){
+                let _timing:number = (v2.stamp - _tl) / (240/(v.bpm as number))
+                _timing = _timing <= 1 && _timing >= 0 ? Easing(_timing, v.ease as ease) : _timing
+                if(_timing <= 1 && _timing >= -0.1){
+                    let _x = -200+450*_timing + _l
+                    _d == 'stroke' ? g.lineStyle(_nl, parseHex(_nc)) : g.beginFill(parseHex(_nc))
+                    _sh == 'arc' ? g.drawCircle(_x, 0, 25) : g.drawRect(_x-25, -25, 50, 50)
+                    _d == 'fill' ? g.endFill() : false
+                }
             }
         })
     }, [])
@@ -654,6 +679,21 @@ export default function Page(){
         let _rr = rendvar.filters.rgbsplit * 5
         rendvar.filters.rgbsplit != 0 ? _arr.push(new RGBSplitFilter([_rr, _rr], [_rr/2, -_rr/2], [-_rr, -_rr])) : false
         return _arr
+    }
+
+    const InitJudges = (_o:obj, ki:number) => {
+        let _idx:number = -1
+        _o.type == 'chart' && _o.visible && _o.notes?.forEach((v2, i2) => {
+            if(v2.judge !== 'none') _idx = i2
+        })
+        if(_idx != -1){
+            let _j:judge = (_o.notes as note[])[_idx].judge
+            let _f:number = _j == 'perfect' ? 0x33ff00 : _j == 'good' ? 0xdddd00 : 0xdd0000
+            return timeline - (_o.notes as note[])[_idx].hit < 0.5 ? <Text key={ki} text={_j} style={new PIXI.TextStyle({align:'center', fontFamily:'Impact', fontSize:20, fontWeight:'400', fill:_f, fontStyle:'normal'})}
+            position={getPos(_o.position, stageSize)} rotation={_o.rotate*Math.PI/180} scale={_o.scale} alpha={_o.opacity} pivot={[_o.anchor[0]*5+230, _o.anchor[1]*0.5+50]}/> : <></>
+        } else {
+            return <></>
+        }
     }
 
     // html 코드
@@ -756,11 +796,15 @@ export default function Page(){
             </div>
             <div style={{width:`${100-mainsetLine-eventsetLine}%`}} className="scene">
                 {/* qwer */}
-                <Stage width={stageSize[0]} height={stageSize[1]} options={{backgroundColor:rendvar.backgroundColor}}>
+                <Stage width={stageSize[0]} height={stageSize[1]} options={{backgroundColor:parseHex(rendvar.backgroundColor)}}>
+                    <Sprite image={"assets/object/square/square1.png"} width={stageSize[0]} height={stageSize[1]} tint={parseHex(rendvar.backgroundColor)}></Sprite>
                     <Container filters={createFilter() as PIXI.Filter[]} pivot={[rendvar.position[0]/100*stageSize[0], rendvar.position[1]/100*stageSize[1]]} x={stageSize[0]/2} y={stageSize[1]/2} scale={rendvar.scale} rotation={rendvar.rotate*Math.PI/180}>
                         {rendvar.objs.map((v, i) => (
-                            v.type == 'sprite' ? <Sprite key={i} image={v.src || "assets"} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} anchor={v.anchor.map(v => (v+50)/100) as [number]}></Sprite>:
-                            v.type == 'chart' && <Graphics key={i} draw={g => chartDraw(g, v, timeline)} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} pivot={[v.anchor[0]*5, v.anchor[1]*0.5]}/>
+                            v.type == 'sprite' && v.visible ? <Sprite key={i} image={v.src || "assets"} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} anchor={v.anchor.map(v => (v+50)/100) as [number]}></Sprite>:
+                            v.type == 'chart' && v.visible && <Graphics key={i} draw={g => chartDraw(g, v, timeline)} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} pivot={[v.anchor[0]*5, v.anchor[1]*0.5]}/>
+                        ))}
+                        {playing && rendvar.objs.map((v, i) => (
+                            InitJudges(v, i)
                         ))}
                     </Container>
                 </Stage>
@@ -982,8 +1026,8 @@ export default function Page(){
                                 onClick={e => {setFocusEvent([i+1, i2]);setFocusing(1)}}></div>
                             ))}
                             {v.type == 'chart' ? v.notes?.map((v2, i2) => (
-                                (condset[0] /100 * (100-objLine) * v2 / endpoint)*(zoom/100) + rowScroll >= 0 &&
-                                <div key={i2} style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v2 / endpoint)*(zoom/100) + rowScroll - 8}px`}}
+                                (condset[0] /100 * (100-objLine) * v2.stamp / endpoint)*(zoom/100) + rowScroll >= 0 &&
+                                <div key={i2} style={{marginLeft:`${(condset[0] /100 * (100-objLine) * v2.stamp / endpoint)*(zoom/100) + rowScroll - 8}px`}}
                                 className={`note ${focusNote[0] == i && focusNote[1] == i2 ? 'selected' : ''}`}
                                 onClick={e => {setFocusNote([i, i2]);setFocusing(2)}}></div>
                             )) : <></>}
@@ -999,4 +1043,3 @@ export default function Page(){
         <audio src={song} style={{display:'none'}}></audio>
     </div>
 }
-//

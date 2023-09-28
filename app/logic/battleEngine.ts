@@ -1,9 +1,9 @@
-import { drawer, ease, filter, filterType, level, renderVar } from "../data/types"
-import { Easing, calcEventColor, calcEventValue, enableFilters} from "../data/utils"
+import { drawer, ease, filter, filterType, judge, level, note, renderVar } from "../data/types"
+import { Easing, calcEventColor, calcEventValue, copy, enableFilters} from "../data/utils"
 
 // rendering 함수 내보내기
-export function render(timeline:number, renderVar:renderVar){
-    let base:renderVar = JSON.parse(JSON.stringify(renderVar))
+export function render(timeline:number, renderVar:renderVar, hits:number[]){
+    let base:renderVar = copy(renderVar)
 
     // main event 적용
     base.events.forEach((v, i) => {
@@ -54,6 +54,48 @@ export function render(timeline:number, renderVar:renderVar){
                 else if(_v2.type == 'change'){base.objs[_i].src = _v2.value}
             }
         })
+    })
+
+    let _noteArr:{stamp:number;hit:number;judge:judge;pointer:number[];bpmd:number;}[] = []
+    base.objs.forEach((v, i) => {
+        if(v.type == 'chart'){
+            v.notes?.forEach((v2, i2) => {
+                _noteArr.push({stamp:v2.stamp, hit:v2.hit, judge:v2.judge, pointer:[i, i2], bpmd:60/(v.bpm as number)})
+            })
+        }
+    })
+    _noteArr.sort((_a, _b) => _a.stamp - _b.stamp)
+
+    let _h:number[] = copy(hits)
+    _h.sort((a, b) => b - a)
+    _noteArr.forEach((v, i) => {
+        let _of:number = 0.4/v.bpmd
+        _of = _of + (_of - 1)/20
+        let _gj:number = (v.bpmd*3/5)*_of
+        let _pj:number = (v.bpmd*1/5)*_of
+        let _mj:number = (v.bpmd)*_of
+        let _delIdx:number = -1
+        let _cd = timeline - v.stamp >= _gj
+        _h.forEach((v2, i2) => {
+            let _j:number = Math.abs(v2 - v.stamp)
+            if(_j <= _pj){
+                (base.objs[v.pointer[0]].notes as note[])[v.pointer[1]].judge = 'perfect';
+            } else if(_j < _gj){
+                (base.objs[v.pointer[0]].notes as note[])[v.pointer[1]].judge = 'good';
+            } else if(_j <= _mj){
+                (base.objs[v.pointer[0]].notes as note[])[v.pointer[1]].judge = 'miss'
+            }
+            if(_j <= _mj){
+                (base.objs[v.pointer[0]].notes as note[])[v.pointer[1]].hit = v2;
+                _delIdx = i2
+            }
+        })
+        if(_delIdx != -1){
+            _h.splice(_delIdx, 1)
+        } else if(_cd){
+            (base.objs[v.pointer[0]].notes as note[])[v.pointer[1]].judge = 'miss';
+            (base.objs[v.pointer[0]].notes as note[])[v.pointer[1]].hit = v.stamp + _gj;
+        }
     })
 
     return base

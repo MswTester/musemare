@@ -2,6 +2,7 @@ export type ease = 'linear'|'insine'|'outsine'|'sine'|'inquad'|'outquad'|'quad'|
 export type objEvType = 'position'|'rotate'|'scale'|'opacity'|'anchor'|'bpm'|'ease'|'visible'|'change'|'mcolor'|'jcolor'|'ncolor'|'drawer'|'shape'|'line'|'nline';
 export type mainEvType = 'bgcolor'|'filter'|'wiggle'|'position'|'rotate'|'scale';
 export type filterType = 'blur'|'dot'|'motionBlur'|'bloom'|'godray'|'convolution'|'glitch'|'grayscale'|'noise'|'pixelate'|'rgbsplit'
+export type judge = 'perfect'|'good'|'miss'|'none'
 
 export type drawer = 'fill'|'stroke'
 export type renderVar = {
@@ -12,6 +13,12 @@ export type renderVar = {
     rotate:number;
     scale:number;
     filters:filter;
+}
+
+export interface note{
+    stamp:number;
+    hit:number;
+    judge:judge;
 }
 
 export interface filter{
@@ -52,7 +59,7 @@ export type objEventProps = 'stamp'|'type'|'value'|'duration'|'ease'
 export interface obj{
     type:'chart'|'sprite';
     bpm?:number; // speed bpm
-    notes?:number[]; // notes' timeStamps(s)
+    notes?:note[]; // notes
     src?:string; // sprite's img src
     position:[number, number];
     rotate:number;
