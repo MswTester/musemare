@@ -3,9 +3,9 @@ export type objEvType = 'position'|'rotate'|'scale'|'opacity'|'anchor'|'bpm'|'ea
 export type mainEvType = 'bgcolor'|'filter'|'wiggle'|'position'|'rotate'|'scale';
 export type filterType = 'blur'|'dot'|'motionBlur'|'bloom'|'godray'|'convolution'|'glitch'|'grayscale'|'noise'|'pixelate'|'rgbsplit'
 export type judge = 'perfect'|'good'|'miss'|'none'
-
 export type drawer = 'fill'|'stroke'
-export type renderVar = {
+
+export interface battleRenderData{
     events:event[];
     objs:obj[];
     backgroundColor:string;

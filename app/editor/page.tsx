@@ -1,12 +1,9 @@
 'use client'
 
-import { ContextType, FC, useCallback, useEffect, useState } from "react"
-import { Easing, copy, enableFilters, getPos, isInRange, parseHex, strengthFilters } from "../data/utils"
-import { obj, event, level, objEvent, mainEvType, eventProps, objEventProps, renderVar, drawer, ease, filter, filterType, note, judge } from "../data/types"
-import { render } from "../logic/battleEngine"
-import { Stage, Container, Sprite, Graphics, Text } from "@pixi/react"
-import * as PIXI from 'pixi.js'
-import { DotFilter, BloomFilter, GlitchFilter, GodrayFilter, GrayscaleFilter, MotionBlurFilter, PixelateFilter, ConvolutionFilter, RGBSplitFilter, ShockwaveFilter, SimpleLightmapFilter } from 'pixi-filters'
+import { useEffect, useState } from "react"
+import { copy, enableFilters, isInRange, strengthFilters } from "../data/utils"
+import { obj, event, level, objEvent, eventProps, objEventProps, filter, filterType } from "../data/types"
+import { battleEngine } from "../logic/battleEngine"
 
 // ui 조절 드래그 범위
 const dragRange = 6
@@ -54,8 +51,7 @@ export default function Page(){
     const [focusing, setFocusing] = useState<number>(0) // 0 = obj, 1 = event, 2 = note
     const [evClipboard, setEvClipboard] = useState<event|objEvent>()
     const [hits, setHits] = useState<number[]>([])
-    
-    const [rendvar, setRendvar] = useState<renderVar>(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale, filters}, hits))
+
     let v_playing:boolean = false, v_zoom:number = 100, v_timeline = 0 // 미등록 자연 변경 변수
 
     let ubl = 30
@@ -607,11 +603,6 @@ export default function Page(){
         }
     }, [events, objs, focusEvent, focusObj, focusNote, focusing, evClipboard, timeline])
 
-    // rendering 렌더링
-    useEffect(() => {
-        setRendvar(render(timeline, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale, filters}, hits))
-    }, [events, objs, timeline, BackgroundColor, position, rotate, scale, hits])
-
     // 플레이
     useEffect(() => {
         if(playing){
@@ -630,72 +621,37 @@ export default function Page(){
     }, [timeline, playing, hits])
     useEffect(() => {if(!playing) setHits([])}, [playing])
 
-    // chart pixi drawer
-    const chartDraw = useCallback((g:PIXI.Graphics, v:obj, _tl:number) => {
-        let _mc:string = v.mcolor as string
-        let _jc:string = v.jcolor as string
-        let _nc:string = v.ncolor as string
-        let _d:drawer = v.drawer as drawer
-        let _sh:string = v.shape as string
-        let _l:number = v.line as number
-        let _nl:number = v.nline as number
-        g.clear();
-        g.beginFill(parseHex(_mc))
-        g.drawRect(-250+(_l/2), 1-(_l/2), 500, _l)
-        g.drawRect(-250+(_l/2), -25, _l, 50)
-        g.drawRect(250-(_l/2), -25, _l, 50)
-        g.endFill()
-        g.beginFill(parseHex(_jc))
-        g.drawRect(-200+(_l/2), -25, _l, 50)
-        g.endFill()
-        v.notes?.forEach((v2, i2) => {
-            if(v2.judge == 'none'){
-                let _timing:number = (v2.stamp - _tl) / (240/(v.bpm as number))
-                _timing = _timing <= 1 && _timing >= 0 ? Easing(_timing, v.ease as ease) : _timing
-                if(_timing <= 1 && _timing >= -0.1){
-                    let _x = -200+450*_timing + _l
-                    _d == 'stroke' ? g.lineStyle(_nl, parseHex(_nc)) : g.beginFill(parseHex(_nc))
-                    _sh == 'arc' ? g.drawCircle(_x, 0, 25) : g.drawRect(_x-25, -25, 50, 50)
-                    _d == 'fill' ? g.endFill() : false
-                }
-            }
-        })
-    }, [])
-
-    const createFilter = () => {
-        let _arr:PIXI.Filter[] = []
-        rendvar.filters.blur != 0 ? _arr.push(new PIXI.BlurFilter(rendvar.filters.blur)) : false
-        rendvar.filters.dot != 0 ? _arr.push(new DotFilter(rendvar.filters.dot)) : false
-        rendvar.filters.motionBlur != 0 ? _arr.push(new MotionBlurFilter([10, 10], rendvar.filters.motionBlur*5)) : false
-        rendvar.filters.bloom != 0 ? _arr.push(new BloomFilter(rendvar.filters.bloom*2)) : false
-        rendvar.filters.godray != 0 ? _arr.push(new GodrayFilter({gain:rendvar.filters.godray})) : false
-        rendvar.filters.convolution != 0 ? _arr.push(new ConvolutionFilter([rendvar.filters.convolution, rendvar.filters.convolution])) : false
-        let _gr = rendvar.filters.glitch * 5
-        let _gopt = {red:[_gr, _gr], blue:[_gr/2, -_gr/2], green:[-_gr, -_gr]}
-        rendvar.filters.glitch != 0 ? _arr.push(new GlitchFilter(_gopt)) : false
-        rendvar.filters.grayscale != 0 ? _arr.push(new GrayscaleFilter()) : false
-        rendvar.filters.noise != 0 ? _arr.push(new PIXI.NoiseFilter(rendvar.filters.noise, timeline%1)) : false
-        rendvar.filters.pixelate != 0 ? _arr.push(new PixelateFilter(rendvar.filters.pixelate*10)) : false
-        let _rr = rendvar.filters.rgbsplit * 5
-        rendvar.filters.rgbsplit != 0 ? _arr.push(new RGBSplitFilter([_rr, _rr], [_rr/2, -_rr/2], [-_rr, -_rr])) : false
-        return _arr
+    // easing
+    const EaseOpts = () => {
+        return <>
+            <option value="linear">Linear</option>
+            <option value="insine">In-Sine</option>
+            <option value="outsine">Out-Sine</option>
+            <option value="sine">Sine</option>
+            <option value="inquad">In-Quad</option>
+            <option value="outquad">Out-Quad</option>
+            <option value="quad">Quad</option>
+            <option value="incubic">In-Cubic</option>
+            <option value="outcubic">Out-Cubic</option>
+            <option value="cubic">Cubic</option>
+            <option value="inquart">In-Quart</option>
+            <option value="outquart">Out-Quart</option>
+            <option value="quart">Quart</option>
+            <option value="inquint">In-Quint</option>
+            <option value="outquint">Out-Quint</option>
+            <option value="quint">Quint</option>
+            <option value="inexpo">In-Expo</option>
+            <option value="outexpo">Out-Expo</option>
+            <option value="expo">Expo</option>
+            <option value="incirc">In-Circ</option>
+            <option value="outcirc">Out-Circ</option>
+            <option value="circ">Circ</option>
+            <option value="inback">In-Back</option>
+            <option value="outback">Out-Back</option>
+            <option value="back">Back</option>
+        </>
     }
-
-    const InitJudges = (_o:obj, ki:number) => {
-        let _idx:number = -1
-        _o.type == 'chart' && _o.visible && _o.notes?.forEach((v2, i2) => {
-            if(v2.judge !== 'none') _idx = i2
-        })
-        if(_idx != -1){
-            let _j:judge = (_o.notes as note[])[_idx].judge
-            let _f:number = _j == 'perfect' ? 0x33ff00 : _j == 'good' ? 0xdddd00 : 0xdd0000
-            return timeline - (_o.notes as note[])[_idx].hit < 0.5 ? <Text key={ki} text={_j} style={new PIXI.TextStyle({align:'center', fontFamily:'Impact', fontSize:20, fontWeight:'400', fill:_f, fontStyle:'normal'})}
-            position={getPos(_o.position, stageSize)} rotation={_o.rotate*Math.PI/180} scale={_o.scale} alpha={_o.opacity} pivot={[_o.anchor[0]*5+230, _o.anchor[1]*0.5+50]}/> : <></>
-        } else {
-            return <></>
-        }
-    }
-
+    
     // html 코드
     return <div className="Editor">
         <div style={{height:`${100-underbarLine}%`}} className="workspace">
@@ -762,52 +718,14 @@ export default function Page(){
                         {objs[focusObj-1].type == 'chart' && <div>Note Line Width<input type="number" name="" id="" value={objs[focusObj-1].nline}
                         onChange={e => setObjProperty(focusObj-1, 'nline', +e.target.value)}/></div>}
                         {objs[focusObj-1].type == 'chart' && <div>Ease <select name="" id="" value={objs[focusObj-1].ease}
-                        onChange={e => setObjProperty(focusObj-1, 'ease', e.target.value)}>
-                            <option value="linear">Linear</option>
-                            <option value="insine">In-Sine</option>
-                            <option value="outsine">Out-Sine</option>
-                            <option value="sine">Sine</option>
-                            <option value="inquad">In-Quad</option>
-                            <option value="outquad">Out-Quad</option>
-                            <option value="quad">Quad</option>
-                            <option value="incubic">In-Cubic</option>
-                            <option value="outcubic">Out-Cubic</option>
-                            <option value="cubic">Cubic</option>
-                            <option value="inquart">In-Quart</option>
-                            <option value="outquart">Out-Quart</option>
-                            <option value="quart">Quart</option>
-                            <option value="inquint">In-Quint</option>
-                            <option value="outquint">Out-Quint</option>
-                            <option value="quint">Quint</option>
-                            <option value="inexpo">In-Expo</option>
-                            <option value="outexpo">Out-Expo</option>
-                            <option value="expo">Expo</option>
-                            <option value="incirc">In-Circ</option>
-                            <option value="outcirc">Out-Circ</option>
-                            <option value="circ">Circ</option>
-                            <option value="inback">In-Back</option>
-                            <option value="outback">Out-Back</option>
-                            <option value="back">Back</option>
-                        </select></div>}
+                        onChange={e => setObjProperty(focusObj-1, 'ease', e.target.value)}>{EaseOpts()}</select></div>}
                         {objs[focusObj-1].type == 'sprite' && <div>source URL<input type="text" name="" id="" value={objs[focusObj-1].src}
                         onChange={e => setObjProperty(focusObj-1, 'src', e.target.value)}/></div>}
                     </>
                 }
             </div>
             <div style={{width:`${100-mainsetLine-eventsetLine}%`}} className="scene">
-                {/* qwer */}
-                <Stage width={stageSize[0]} height={stageSize[1]} options={{backgroundColor:parseHex(rendvar.backgroundColor)}}>
-                    <Sprite image={"assets/object/square/square1.png"} width={stageSize[0]} height={stageSize[1]} tint={parseHex(rendvar.backgroundColor)}></Sprite>
-                    <Container filters={createFilter() as PIXI.Filter[]} pivot={[rendvar.position[0]/100*stageSize[0], rendvar.position[1]/100*stageSize[1]]} x={stageSize[0]/2} y={stageSize[1]/2} scale={rendvar.scale} rotation={rendvar.rotate*Math.PI/180}>
-                        {rendvar.objs.map((v, i) => (
-                            v.type == 'sprite' && v.visible ? <Sprite key={i} image={v.src || "assets"} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} anchor={v.anchor.map(v => (v+50)/100) as [number]}></Sprite>:
-                            v.type == 'chart' && v.visible && <Graphics key={i} draw={g => chartDraw(g, v, timeline)} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} pivot={[v.anchor[0]*5, v.anchor[1]*0.5]}/>
-                        ))}
-                        {playing && rendvar.objs.map((v, i) => (
-                            InitJudges(v, i)
-                        ))}
-                    </Container>
-                </Stage>
+                {battleEngine(timeline, hits, stageSize, {events, objs, backgroundColor:BackgroundColor, position, rotate, scale, filters}, playing)}
             </div>
             <div style={{width:`${eventsetLine}%`}} className="eventset">
                 {focusEvent[0] == 0 ? <>
@@ -854,33 +772,7 @@ export default function Page(){
                     checked={events[focusEvent[1]].smooth} onChange={e => setEv(focusEvent[1], 'smooth', e.target.checked)}/></div>}
                     {['filter', 'bgcolor', 'position', 'rotate', 'scale'].includes(events[focusEvent[1]].type) &&
                     (events[focusEvent[1]].type == 'filter' ? strengthFilters.includes(events[focusEvent[1]].filter as filterType) : true) && <div>Ease<select name="" id=""
-                    value={events[focusEvent[1]].ease} onChange={e => setEv(focusEvent[1], 'ease', e.target.value)}>
-                        <option value="linear">Linear</option>
-                        <option value="insine">In-Sine</option>
-                        <option value="outsine">Out-Sine</option>
-                        <option value="sine">Sine</option>
-                        <option value="inquad">In-Quad</option>
-                        <option value="outquad">Out-Quad</option>
-                        <option value="quad">Quad</option>
-                        <option value="incubic">In-Cubic</option>
-                        <option value="outcubic">Out-Cubic</option>
-                        <option value="cubic">Cubic</option>
-                        <option value="inquart">In-Quart</option>
-                        <option value="outquart">Out-Quart</option>
-                        <option value="quart">Quart</option>
-                        <option value="inquint">In-Quint</option>
-                        <option value="outquint">Out-Quint</option>
-                        <option value="quint">Quint</option>
-                        <option value="inexpo">In-Expo</option>
-                        <option value="outexpo">Out-Expo</option>
-                        <option value="expo">Expo</option>
-                        <option value="incirc">In-Circ</option>
-                        <option value="outcirc">Out-Circ</option>
-                        <option value="circ">Circ</option>
-                        <option value="inback">In-Back</option>
-                        <option value="outback">Out-Back</option>
-                        <option value="back">Back</option>
-                    </select></div>}
+                    value={events[focusEvent[1]].ease} onChange={e => setEv(focusEvent[1], 'ease', e.target.value)}>{EaseOpts()}</select></div>}
                 </>:
                 focusEvent[0] > 0 ? <>
                     <div>TimeStamp<input type="text" name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].stamp} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'stamp', +e.target.value)}/></div>
@@ -905,33 +797,7 @@ export default function Page(){
                     {['position', 'rotate', 'scale', 'opacity', 'anchor', 'bpm', 'mcolor', 'jcolor', 'ncolor', 'line', 'nline'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Duration<input type="number" name="" id=""
                     value={objs[focusEvent[0]-1].events[focusEvent[1]].duration} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'duration', +e.target.value)}/></div>}
                     {['position', 'rotate', 'scale', 'opacity', 'anchor', 'bpm', 'mcolor', 'jcolor', 'ncolor', 'line', 'nline'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) && <div>Ease<select name="" id=""
-                    value={objs[focusEvent[0]-1].events[focusEvent[1]].ease} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'ease', e.target.value)}>
-                        <option value="linear">Linear</option>
-                        <option value="insine">In-Sine</option>
-                        <option value="outsine">Out-Sine</option>
-                        <option value="sine">Sine</option>
-                        <option value="inquad">In-Quad</option>
-                        <option value="outquad">Out-Quad</option>
-                        <option value="quad">Quad</option>
-                        <option value="incubic">In-Cubic</option>
-                        <option value="outcubic">Out-Cubic</option>
-                        <option value="cubic">Cubic</option>
-                        <option value="inquart">In-Quart</option>
-                        <option value="outquart">Out-Quart</option>
-                        <option value="quart">Quart</option>
-                        <option value="inquint">In-Quint</option>
-                        <option value="outquint">Out-Quint</option>
-                        <option value="quint">Quint</option>
-                        <option value="inexpo">In-Expo</option>
-                        <option value="outexpo">Out-Expo</option>
-                        <option value="expo">Expo</option>
-                        <option value="incirc">In-Circ</option>
-                        <option value="outcirc">Out-Circ</option>
-                        <option value="circ">Circ</option>
-                        <option value="inback">In-Back</option>
-                        <option value="outback">Out-Back</option>
-                        <option value="back">Back</option>
-                    </select></div>}
+                    value={objs[focusEvent[0]-1].events[focusEvent[1]].ease} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'ease', e.target.value)}>{EaseOpts()}</select></div>}
                     {['mcolor', 'jcolor', 'ncolor'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Color Value<input type="color" name="" id=""
                     value={objs[focusEvent[0]-1].events[focusEvent[1]].value} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', e.target.value)}/></div> :
                     ['rotate', 'opacity', 'bpm', 'change', 'line', 'nline'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Value<input type="text" name="" id=""
@@ -939,33 +805,7 @@ export default function Page(){
                     ['position', 'scale', 'anchor'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Value<input type="number" name="" id=""
                     value={objs[focusEvent[0]-1].events[focusEvent[1]].value[0]} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', [+e.target.value, objs[focusEvent[0]-1].events[focusEvent[1]].value[1]])}/>
                     <input type="number" name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].value[1]} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', [objs[focusEvent[0]-1].events[focusEvent[1]].value[0], +e.target.value])}/></div>:
-                    ['ease'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>EaseType<select name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].ease} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'ease', e.target.value)}>
-                        <option value="linear">Linear</option>
-                        <option value="insine">In-Sine</option>
-                        <option value="outsine">Out-Sine</option>
-                        <option value="sine">Sine</option>
-                        <option value="inquad">In-Quad</option>
-                        <option value="outquad">Out-Quad</option>
-                        <option value="quad">Quad</option>
-                        <option value="incubic">In-Cubic</option>
-                        <option value="outcubic">Out-Cubic</option>
-                        <option value="cubic">Cubic</option>
-                        <option value="inquart">In-Quart</option>
-                        <option value="outquart">Out-Quart</option>
-                        <option value="quart">Quart</option>
-                        <option value="inquint">In-Quint</option>
-                        <option value="outquint">Out-Quint</option>
-                        <option value="quint">Quint</option>
-                        <option value="inexpo">In-Expo</option>
-                        <option value="outexpo">Out-Expo</option>
-                        <option value="expo">Expo</option>
-                        <option value="incirc">In-Circ</option>
-                        <option value="outcirc">Out-Circ</option>
-                        <option value="circ">Circ</option>
-                        <option value="inback">In-Back</option>
-                        <option value="outback">Out-Back</option>
-                        <option value="back">Back</option>
-                    </select></div>:
+                    ['ease'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>EaseType<select name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].ease} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'ease', e.target.value)}>{EaseOpts()}</select></div>:
                     ['visible'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Visible<input type="checkbox" name="" id=""
                     checked={objs[focusEvent[0]-1].events[focusEvent[1]].value} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', e.target.checked)}/></div>:
                     ['drawer'].includes(objs[focusEvent[0]-1].events[focusEvent[1]].type) ? <div>Note Drawer<select name="" id="" value={objs[focusEvent[0]-1].events[focusEvent[1]].value} onChange={e => setObjEv(focusEvent[0]-1, focusEvent[1], 'value', e.target.value)}>
@@ -986,7 +826,8 @@ export default function Page(){
                     </select>
                     <button onClick={e => addObj()}>+</button></div>
                 </div>
-                {Math.round(colScroll) <= 0 && <div className={focusObj == 0 ? 'selected' : ''} onClick={e => {setFocusObj(0);setFocusing(0)}}>Main<button onClick={e => addEv()}>Add Event</button></div>}
+                {Math.round(colScroll) <= 0 && <div className={focusObj == 0 ? 'selected' : ''}
+                onClick={e => {setFocusObj(0);setFocusing(0)}}>Main<button onClick={e => addEv()}>Add Event</button></div>}
                 {objs.map((v, i) => (
                     Math.round(colScroll) <= i+1 && <div key={i} className={focusObj == i+1 ? 'selected' : ''} onClick={e => {setFocusObj(i+1);setFocusing(0)}}>{`Obj${i+1}`}
                     {v.type == 'chart' && <button onClick={e => addChartNote(i)}>Add Note</button>}
