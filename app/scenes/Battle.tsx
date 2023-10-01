@@ -8,7 +8,7 @@ import { battleEngine } from "../logic/battleEngine"
 import { levels } from "../data/level"
 import { copy, lvlToRendata } from "../data/utils"
 
-const playKeys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Semicolon', 'Quote', 'Comma', 'Period', 'Slash', 'BracketLeft', 'BracketRight', 'Backslash', 'Equal', 'Minus', 'Digit0', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9']
+const playKeys = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Semicolon', 'Quote', 'Comma', 'Period', 'Slash', 'BracketLeft', 'BracketRight', 'Backslash', 'Equal', 'Minus', 'Digit0', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Space', 'ControlLeft', 'AltLeft', 'ControlRight', 'ContextMenu', 'AltRight', 'Enter', 'Backspace', 'Backquote', 'Tab', 'ShiftLeft', 'RightLeft', 'CapsLock', 'Numpad0', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad4', 'Numpad5', 'Numpad6', 'Numpad7', 'Numpad8', 'Numpad9', 'NumpadDecimal', 'NumLock', 'NumpadEnter', 'NumpadSubtract', 'NumpadAdd', 'NumpadMultiply', 'NumpadDivide', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
 
 export default function Index(){
     const {lang, setLang} = useContext(globalContext)
@@ -40,11 +40,22 @@ export default function Index(){
     }, [b_event])
 
     useEffect(() => {
+        const audio = document.querySelector('audio') as HTMLAudioElement
+
+        audio.volume = levels[battleCode].volume
+
         function resizeCanvas(){
             setStageSize([innerWidth, innerHeight])
         }
         window.onresize = resizeCanvas
         resizeCanvas()
+
+        let t = 0
+        let loop = setInterval(() => {
+            t += 0.02
+            setBrightness(t)
+            if(t >= 1) clearInterval(loop)
+        }, 1)
     }, [])
 
     useInterval(() => {
@@ -68,7 +79,7 @@ export default function Index(){
         }
     }, [timeline, hits])
 
-    return <div className="Battle">
+    return <div style={{filter:`brightness(${brightness})`}} className="Battle">
         <audio src={levels[battleCode].song} autoPlay={true}></audio>
         {battleEngine(timeline, hits, stageSize, lvlToRendata(levels[battleCode]), true)}
     </div>

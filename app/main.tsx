@@ -6,6 +6,7 @@ import Intro from './scenes/Intro'
 import Settings from './scenes/Settings'
 import Credits from './scenes/Credits'
 import Battle from './scenes/Battle'
+import FogForest from './scenes/FogForest'
 
 // 글로벌 설정
 export const globalConfig:{[key:string]:any} = {
@@ -44,6 +45,7 @@ export default function Index(){
             scene == 'Settings' ? <Settings /> :
             scene == 'Credits' ? <Credits /> :
             scene == 'Battle' ? <Battle /> :
+            scene == 'FogForest' ? <FogForest /> :
             <></>)
         }
     </globalContext.Provider>

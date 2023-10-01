@@ -51,10 +51,10 @@ export default function Index(){
                     <div>{toLang(lang, 'specialthanks')}</div>
                 </div>
                 <div>
-                    <div>냉장고 퐁퐁 푸른슬라임</div>
-                    <div>냉장고 퐁퐁 푸른슬라임</div>
+                    <div>냉장고 문선우 푸른슬라임</div>
+                    <div>냉장고 문선우 푸른슬라임</div>
                     <div>냉장고</div>
-                    <div>퐁퐁 푸른슬라임</div>
+                    <div>문선우 푸른슬라임</div>
                     <div>학원쌤</div>
                 </div>
             </div>

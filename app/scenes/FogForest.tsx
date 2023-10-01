@@ -3,8 +3,11 @@
 import { useContext, useEffect, useState } from "react"
 import { globalContext } from "../main"
 import { toLang } from "../data/lang"
+import { exRender } from "../logic/exploreRenderer"
+import { useWindowSize } from "usehooks-ts"
 
 export default function Index(){
+    const { width, height } = useWindowSize()
     const {lang, setLang} = useContext(globalContext)
     const {scene, setScene} = useContext(globalContext)
     const [brightness, setBrightness] = useState<number>(0)
@@ -28,5 +31,16 @@ export default function Index(){
         }
     }, [b_event])
 
-    return <canvas className="Battle"></canvas>
+    useEffect(() => {
+        let t = 0
+        let loop = setInterval(() => {
+            t += 0.02
+            setBrightness(t)
+            if(t >= 1) clearInterval(loop)
+        }, 1)
+    }, [])
+
+    return <div style={{filter:`brightness(${brightness})`}} className="Explore">
+        {exRender([width, height], lang)}
+    </div>
 }
