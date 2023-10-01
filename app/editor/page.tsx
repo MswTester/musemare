@@ -483,7 +483,7 @@ export default function Page(){
                 _arr[_i].value = 100
             }
         }
-        _arr[_i][_t] = _t == 'value' ? Number.isNaN(+_v) ? _v : +_v : _v
+        _arr[_i][_t] = _t == 'value' || _t == 'speed' ? Number.isNaN(+_v) ? _v : +_v : _v
         setEvents(_arr)
     }
 

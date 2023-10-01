@@ -21,6 +21,7 @@ export default function Index(){
     const [lang, setLang] = useState<string>(globalConfig['defaultLang'])
     const [scene, setScene] = useState<string>(globalConfig['startScene'])
     const [battleCode, setBattleCode] = useState<string>(globalConfig['testBattleCode'])
+    const [afterBattleScene, setAfterBattleScene] = useState<string>(globalConfig['startScene'])
     const [load, setLoad] = useState<boolean>(false)
 
     useEffect(() => {
@@ -32,6 +33,8 @@ export default function Index(){
         // 글로벌 state 변수 업로드
         scene, setScene,
         lang, setLang,
+        battleCode, setBattleCode,
+        afterBattleScene, setAfterBattleScene,
     }}>
         {
             // scene 불러오기

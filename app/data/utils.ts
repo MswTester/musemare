@@ -1,4 +1,4 @@
-import { drawer, ease, obj } from "./types";
+import { battleRenderData, drawer, ease, level, obj } from "./types";
 
 export function isInRange(me:number, range:number, tar:number){
     return tar - range < me && me < tar + range
@@ -124,3 +124,8 @@ export function parseHex(hex:string){
 
 export const strengthFilters = ['blur', 'dot', 'motionBlur', 'bloom', 'godray', 'convolution', 'glitch', 'noise', 'pixelate', 'rgbsplit']
 export const enableFilters = ['grayscale']
+
+
+export function lvlToRendata(lv:level):battleRenderData{
+    return {backgroundColor:lv.backgroundColor, events:lv.events, filters:lv.filters, objs:lv.objs, position:lv.position, rotate:lv.rotate, scale:lv.scale}
+}

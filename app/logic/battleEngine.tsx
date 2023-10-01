@@ -3,6 +3,7 @@ import { Easing, calcEventColor, calcEventValue, copy, enableFilters, getPos, pa
 import { Stage, Container, Sprite, Graphics, Text } from "@pixi/react"
 import * as PIXI from 'pixi.js'
 import { DotFilter, BloomFilter, GlitchFilter, GodrayFilter, GrayscaleFilter, MotionBlurFilter, PixelateFilter, ConvolutionFilter, RGBSplitFilter } from 'pixi-filters'
+import { toLang } from "../data/lang"
 
 // chart pixi drawer
 const chartDraw = (g:PIXI.Graphics, v:obj, _tl:number) => {
@@ -65,7 +66,7 @@ const InitJudges = (_o:obj, ki:number, timeline:number, stageSize:[number, numbe
     if(_idx != -1){
         let _j:judge = (_o.notes as note[])[_idx].judge
         let _f:number = _j == 'perfect' ? 0x33ff00 : _j == 'good' ? 0xdddd00 : 0xdd0000
-        return timeline - (_o.notes as note[])[_idx].hit < 0.5 ? <Text key={ki} text={_j} style={new PIXI.TextStyle({align:'center', fontFamily:'Impact', fontSize:20, fontWeight:'400', fill:_f, fontStyle:'normal'})}
+        return timeline - (_o.notes as note[])[_idx].hit < 0.5 ? <Text key={ki} text={_j.toUpperCase()} style={new PIXI.TextStyle({align:'center', fontFamily:'Impact', fontSize:20, fontWeight:'400', fill:_f, fontStyle:'normal'})}
         position={getPos(_o.position, stageSize)} rotation={_o.rotate*Math.PI/180} scale={_o.scale} alpha={_o.opacity} pivot={[_o.anchor[0]*5+230, _o.anchor[1]*0.5+50]}/> : <></>
     } else {
         return <></>
@@ -141,7 +142,7 @@ export const battleEngine = (timeline:number, hits:number[], stageSize:[number, 
     _h.sort((a, b) => b - a)
     _noteArr.forEach((v, i) => {
         let _of:number = 0.4/v.bpmd
-        _of = _of + ((_of - 1)/20)
+        _of = 1 + ((_of - 1)/2)
         let _gj:number = (v.bpmd*3/5)*_of
         let _pj:number = (v.bpmd*1/5)*_of
         let _mj:number = (v.bpmd)*_of
