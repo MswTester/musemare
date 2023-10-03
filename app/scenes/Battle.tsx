@@ -42,7 +42,7 @@ export default function Index(){
     useEffect(() => {
         const audio = document.querySelector('audio') as HTMLAudioElement
 
-        audio.volume = levels[battleCode].volume
+        audio.volume = +(levels[battleCode].volume)/100
 
         function resizeCanvas(){
             setStageSize([innerWidth, innerHeight])
