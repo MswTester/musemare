@@ -5,6 +5,29 @@ export type filterType = 'blur'|'dot'|'motionBlur'|'bloom'|'godray'|'convolution
 export type judge = 'perfect'|'good'|'miss'|'none'
 export type drawer = 'fill'|'stroke'
 
+export interface sprite{
+    position:[number, number];
+    rotation:number;
+    scale:[number, number];
+    opacity:number;
+    anchor:[number, number];
+    hitbox:[number, number];
+    src:string;
+    isGravity:boolean;
+    isCollision:boolean;
+}
+
+export interface text{
+    position:[number, number];
+    rotation:number;
+    scale:[number, number];
+    opacity:number;
+    anchor:[number, number];
+    content:string;
+    color:string;
+    weight:string;
+}
+
 export interface battleRenderData{
     events:event[];
     objs:obj[];

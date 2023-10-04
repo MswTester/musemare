@@ -6,6 +6,7 @@ import { toLang } from "../data/lang"
 
 export default function Index(){
     const {afterBattleScene, setAfterBattleScene} = useContext(globalContext)
+    const {battleCode, setBattleCode} = useContext(globalContext)
     const {scene, setScene} = useContext(globalContext)
     const {lang, setLang} = useContext(globalContext)
     const [canSkip, setCanSkip] = useState<boolean>(false)
@@ -36,6 +37,7 @@ export default function Index(){
             window.addEventListener('keydown', e => {
                 if(e.code == 'KeyF'){
                     endWith('Battle')
+                    setBattleCode('moai')
                     setAfterBattleScene('FogForest')
                 }
             })

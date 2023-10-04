@@ -5,13 +5,16 @@ import { globalContext } from "../main"
 import { toLang } from "../data/lang"
 import { exRender } from "../logic/exploreRenderer"
 import { useWindowSize } from "usehooks-ts"
+import { sprite, text } from "../data/types"
 
 export default function Index(){
     const { width, height } = useWindowSize()
     const {lang, setLang} = useContext(globalContext)
     const {scene, setScene} = useContext(globalContext)
     const [brightness, setBrightness] = useState<number>(0)
-    const [b_event ,setB_event] = useState<string>('')
+    const [b_event, setB_event] = useState<string>('')
+    const [sprites, setSprites] = useState<sprite[]>([])
+    const [texts, setTexts] = useState<text[]>([])
 
     const endWith = (str:string) => {
         setB_event(str)
@@ -41,6 +44,6 @@ export default function Index(){
     }, [])
 
     return <div style={{filter:`brightness(${brightness})`}} className="Explore">
-        {exRender([width, height], lang)}
+        {exRender([width, height], lang, sprites, texts)}
     </div>
 }
