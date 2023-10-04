@@ -1,6 +1,6 @@
 {
   "name": "musemare",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -30,5 +30,8 @@
   },
   "devDependencies": {
     "sass": "^1.68.0"
-  }
+  },
+  "main": "index.js",
+  "repository": "https://github.com/MswTester/musemare",
+  "license": "MIT"
 }

@@ -1,9 +1,9 @@
 import { Sprite, Stage, Text } from "@pixi/react"
-import { sprite, text } from "../data/types"
+import { env, Msprite, Rsprite, text } from "../data/types"
 import { getPos, parseHex } from "../data/utils"
-import PIXI, {} from 'pixi.js'
+import * as PIXI from 'pixi.js'
 
-export const exRender = (stageSize:[number, number], lang:string, sprites:sprite[], texts:text[]) => {
+export const exRender = (stageSize:[number, number], lang:string, sprites:Rsprite[], texts:text[]) => {
     return <Stage width={stageSize[0]} height={stageSize[1]}>
         {sprites.map((_v, _i) => (
             <Sprite key={_i} image={_v.src || "assets"} position={getPos(_v.position, stageSize)} rotation={_v.rotation*Math.PI/180} scale={_v.scale} alpha={_v.opacity} anchor={_v.anchor.map(v => (v+50)/100) as [number]}></Sprite>
@@ -13,4 +13,8 @@ export const exRender = (stageSize:[number, number], lang:string, sprites:sprite
             position={getPos(_v.position, stageSize)} rotation={_v.rotation*Math.PI/180} scale={_v.scale} alpha={_v.opacity} pivot={[_v.anchor[0]*5+230, _v.anchor[1]*0.5+50]}/>
         ))}
     </Stage>
+}
+
+export const execute = (lang:string, sprites:Msprite[], gravity:number, inputs:string[], env:env) => {
+
 }

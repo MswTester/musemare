@@ -7,12 +7,21 @@ import Settings from './scenes/Settings'
 import Credits from './scenes/Credits'
 import Battle from './scenes/Battle'
 import FogForest from './scenes/FogForest'
+import { env } from "./data/types"
 
 // 글로벌 설정
 export const globalConfig:{[key:string]:any} = {
     startScene:'MainMenu',
     defaultLang:'en-US',
     testBattleCode:'test',
+    defaultEnv:{keys:{
+        playerLeft:'KeyA',
+        playerRight:'KeyD',
+        playerJump:'Space',
+        playerSneak:'ControlLeft',
+        interaction:'KeyF',
+        escape:'Escape',
+    }},
 }
 
 export const globalContext = createContext<any>({})
@@ -23,6 +32,7 @@ export default function Index(){
     const [scene, setScene] = useState<string>(globalConfig['startScene'])
     const [battleCode, setBattleCode] = useState<string>(globalConfig['testBattleCode'])
     const [afterBattleScene, setAfterBattleScene] = useState<string>(globalConfig['startScene'])
+    const [env, setEnv] = useState<env>(globalConfig['defaultEnv'])
     const [load, setLoad] = useState<boolean>(false)
 
     useEffect(() => {
@@ -36,6 +46,7 @@ export default function Index(){
         lang, setLang,
         battleCode, setBattleCode,
         afterBattleScene, setAfterBattleScene,
+        env, setEnv,
     }}>
         {
             // scene 불러오기

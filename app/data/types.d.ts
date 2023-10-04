@@ -5,7 +5,30 @@ export type filterType = 'blur'|'dot'|'motionBlur'|'bloom'|'godray'|'convolution
 export type judge = 'perfect'|'good'|'miss'|'none'
 export type drawer = 'fill'|'stroke'
 
-export interface sprite{
+export interface keys{
+    playerLeft:string;
+    playerRight:string;
+    playerJump:string;
+    playerSneak:string;
+    interaction:string;
+    escape:string;
+}
+
+export interface env{
+    keys:keys
+}
+
+export interface Rsprite{
+    position:[number, number];
+    rotation:number;
+    scale:[number, number];
+    opacity:number;
+    anchor:[number, number];
+    hitbox:[number, number];
+    src:string;
+}
+
+export interface Msprite{
     position:[number, number];
     rotation:number;
     scale:[number, number];
@@ -15,6 +38,12 @@ export interface sprite{
     src:string;
     isGravity:boolean;
     isCollision:boolean;
+    isGround:boolean;
+    dposition:[number, number];
+}
+
+export interface player{
+    isSneak:boolean;
 }
 
 export interface text{

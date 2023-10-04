@@ -1,4 +1,4 @@
-import { battleRenderData, drawer, ease, level, obj } from "./types";
+import { battleRenderData, drawer, ease, level, Msprite, obj, Rsprite } from "./types";
 
 export function isInRange(me:number, range:number, tar:number){
     return tar - range < me && me < tar + range
@@ -128,4 +128,13 @@ export const enableFilters = ['grayscale']
 
 export function lvlToRendata(lv:level):battleRenderData{
     return {backgroundColor:lv.backgroundColor, events:lv.events, filters:lv.filters, objs:lv.objs, position:lv.position, rotate:lv.rotate, scale:lv.scale}
+}
+
+export function MsToRs(ms:Msprite):Rsprite{
+    return {anchor:ms.anchor, hitbox:ms.hitbox, opacity:ms.opacity, position:ms.position, rotation:ms.rotation,
+    scale:ms.scale, src:ms.src}
+}
+
+export function MsArrToRsArr(ms:Msprite[]):Rsprite[]{
+    return ms.map(v => MsToRs(v)) as Rsprite[]
 }
