@@ -40,6 +40,7 @@ export default function Page(){
     // env settings
     const [grid, setGrid] = useState<number>(4)
     const [gridOffset, setGridOffset] = useState<number>(0)
+    const [chartOffset, setChartOffset] = useState<number>(0)
     const [playing, setPlaying] = useState<boolean>(false)
     const [zoom, setZoom] = useState<number>(100)
     const [timeline, setTimeline] = useState<number>(0)
@@ -507,12 +508,26 @@ export default function Page(){
         setObjs(_arr)
     }
 
+    // 오브젝트 인덱스 설정 함수
     const setObjIdx = (_i:number, _ri:number) => {
         let _arr:obj[] = copy(objs)
         let _exboard:obj = copy(_arr[_i])
         _arr.splice(_i, 1)
         let _resArr:obj[] = [..._arr.slice(0, _ri), _exboard, ..._arr.slice(_ri)]
         setObjs(_resArr)
+    }
+
+    // 차트 오프셋 전체 변경 함수
+    const changeChartOffset = () => {
+        let _arr:obj[] = copy(objs)
+        _arr.forEach(v => {
+            if(v.type == 'chart'){
+                v.notes?.forEach(v2 => {
+                    v2.stamp += chartOffset
+                })
+            }
+        })
+        setObjs(_arr)
     }
 
     // 오브젝트 및 이벤트 선택 & 삭제 & 해제 & 수정
@@ -651,7 +666,7 @@ export default function Page(){
             <option value="back">Back</option>
         </>
     }
-    
+
     // html 코드
     return <div className="Editor">
         <div style={{height:`${100-underbarLine}%`}} className="workspace">
@@ -669,6 +684,7 @@ export default function Page(){
                 <hr />
                 {
                     focusObj == 0 ? <>
+                        <div><button onClick={e => changeChartOffset()}>Set Chart Offset</button><input type="text" name="" id="" value={chartOffset} onChange={e => setChartOffset(+e.target.value)} /></div>
                         <div>Grid<input type="text" name="" id="" value={grid} onChange={e => setGrid(+e.target.value)} /></div>
                         <div>Grid Offset<input type="text" name="" id="" value={gridOffset} onChange={e => setGridOffset(+e.target.value)} /></div>
                         <div>BPM<input type="text" name="" id="" value={bpm} onChange={e => setBpm(+e.target.value)} /></div>

@@ -6,7 +6,7 @@ import Intro from './scenes/Intro'
 import Settings from './scenes/Settings'
 import Credits from './scenes/Credits'
 import Battle from './scenes/Battle'
-import FogForest from './scenes/FogForest'
+import Explore from './scenes/Explore'
 import { env } from "./data/types"
 
 // 글로벌 설정
@@ -18,10 +18,33 @@ export const globalConfig:{[key:string]:any} = {
         playerLeft:'KeyA',
         playerRight:'KeyD',
         playerJump:'Space',
+        playerRun:'ShiftLeft',
         playerSneak:'ControlLeft',
         interaction:'KeyF',
         escape:'Escape',
     }},
+    startExploreCode:'FogForest',
+    defaultPlayer:{
+        position:[0,0],
+        rotation:0,
+        width:100, height:150,
+        opacity:1,
+        anchor:[0.5, 0.5],
+        src:'assets/character/test/test1.png',
+        runSrc:'',
+        sneakSrc:'',
+        dposition:[0, 0],
+        isSneak:false,
+        isRun:false,
+        isGround:false,
+        hitbox:[1, 1],
+        events:[],
+    },
+    defaultCamera:{
+        position:[0,0],
+        rotation:0,
+        scale:1,
+    },
 }
 
 export const globalContext = createContext<any>({})
@@ -32,12 +55,19 @@ export default function Index(){
     const [scene, setScene] = useState<string>(globalConfig['startScene'])
     const [battleCode, setBattleCode] = useState<string>(globalConfig['testBattleCode'])
     const [afterBattleScene, setAfterBattleScene] = useState<string>(globalConfig['startScene'])
+    const [exploreCode, setExploreCode] = useState<string>(globalConfig['startExploreCode'])
     const [env, setEnv] = useState<env>(globalConfig['defaultEnv'])
     const [load, setLoad] = useState<boolean>(false)
 
     useEffect(() => {
-        setLang(navigator.language)
+        setLang(navigator.language ?? globalConfig['defaultLang'])
         setLoad(true)
+
+        if(localStorage.getItem('env')){
+            setEnv(JSON.parse(localStorage.getItem('env')!) as env)
+        } else {
+            localStorage.setItem('env', JSON.stringify(globalConfig['defaultEnv']))
+        }
     }, [])
 
     return <globalContext.Provider value={{
@@ -56,7 +86,7 @@ export default function Index(){
             scene == 'Settings' ? <Settings /> :
             scene == 'Credits' ? <Credits /> :
             scene == 'Battle' ? <Battle /> :
-            scene == 'FogForest' ? <FogForest /> :
+            scene == 'Explore' ? <Explore /> :
             <></>)
         }
     </globalContext.Provider>

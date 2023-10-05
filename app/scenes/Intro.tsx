@@ -36,9 +36,10 @@ export default function Index(){
             setCanSkip(true)
             window.addEventListener('keydown', e => {
                 if(e.code == 'KeyF'){
-                    endWith('Battle')
-                    setBattleCode('moai')
-                    setAfterBattleScene('FogForest')
+                    endWith('Explore')
+                    // endWith('Battle')
+                    // setBattleCode('moai')
+                    // setAfterBattleScene('FogForest')
                 }
             })
         }, 2000);
@@ -46,7 +47,7 @@ export default function Index(){
 
     return <div style={{filter:`brightness(${brightness})`}} className="Intro">
         <video className="Intro-vid" onEnded={e => setScene('Battle')} autoPlay={true} controls={false}
-    src="assets/video/testvid.mp4" ></video>
+        src="assets/video/testvid.mp4" muted={true}></video>
         {canSkip && <div className="skip">{toLang(lang, 'press skip')}</div>}
-        </div>
+    </div>
 }

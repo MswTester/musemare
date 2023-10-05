@@ -1,4 +1,4 @@
-import { battleRenderData, drawer, ease, level, Msprite, obj, Rsprite } from "./types";
+import { battleRenderData, CollisionDirection, CollisionResult, drawer, ease, level, Msprite, obj, player, Rsprite } from "./types";
 
 export function isInRange(me:number, range:number, tar:number){
     return tar - range < me && me < tar + range
@@ -132,9 +132,50 @@ export function lvlToRendata(lv:level):battleRenderData{
 
 export function MsToRs(ms:Msprite):Rsprite{
     return {anchor:ms.anchor, hitbox:ms.hitbox, opacity:ms.opacity, position:ms.position, rotation:ms.rotation,
-    scale:ms.scale, src:ms.src}
+    width:ms.width, height:ms.height, src:ms.src}
 }
 
 export function MsArrToRsArr(ms:Msprite[]):Rsprite[]{
     return ms.map(v => MsToRs(v)) as Rsprite[]
+}
+
+export function checkCollision(sp1:Msprite, sp2:Msprite):CollisionResult{
+    const x1 = sp1.position[0] + sp1.dposition[0] + (sp1.anchor[0]/100) * sp1.width;
+    const y1 = sp1.position[1] + sp1.dposition[1] + (sp1.anchor[1]/100) * sp1.height;
+    const w1 = sp1.width;
+    const h1 = sp1.height;
+
+    const x2 = sp2.position[0] + (sp2.anchor[0]/100) * sp2.width;
+    const y2 = sp2.position[1] + (sp2.anchor[1]/100) * sp2.height;
+    const w2 = sp2.width;
+    const h2 = sp2.height;
+
+    // check collision
+    
+
+    let direction:CollisionDirection[] = ['None', 'None'];
+
+    return {
+        collided: !direction.includes('None'),
+        direction: direction
+    };
+}
+
+export function playerToMsprite(_player:player){
+    return {
+        position:_player.position,
+        rotation:_player.rotation,
+        width:_player.width,
+        height:_player.height,
+        opacity:_player.opacity,
+        anchor:_player.anchor,
+        hitbox:_player.hitbox,
+        src:_player.src,
+        isGravity:true,
+        isCollision:true,
+        isGround:_player.isGround,
+        dposition:_player.dposition,
+        tags:[],
+        events:_player.events,
+    } as Msprite
 }

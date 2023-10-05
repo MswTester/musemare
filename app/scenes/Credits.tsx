@@ -48,6 +48,7 @@ export default function Index(){
                     <div>{toLang(lang, 'story')}</div>
                     <div>{toLang(lang, 'illustration')}</div>
                     <div>{toLang(lang, 'development')}</div>
+                    <div>{toLang(lang, 'audiotrack')}</div>
                     <div>{toLang(lang, 'specialthanks')}</div>
                 </div>
                 <div>
@@ -55,6 +56,7 @@ export default function Index(){
                     <div>냉장고 문선우 푸른슬라임</div>
                     <div>냉장고</div>
                     <div>문선우 푸른슬라임</div>
+                    <div>누굴까</div>
                     <div>학원쌤</div>
                 </div>
             </div>

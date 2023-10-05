@@ -67,6 +67,10 @@ const langs:{[key:string]:{[key:string]:string}} = {
         'ko':'스토리',
         'en':'Story',
     },
+    'audiotrack':{
+        'ko':'오디오 트랙',
+        'en':'Audio Track',
+    },
 }
 
 export function toLang(lang:string, data:string){

@@ -4,12 +4,19 @@ export type mainEvType = 'bgcolor'|'filter'|'wiggle'|'position'|'rotate'|'scale'
 export type filterType = 'blur'|'dot'|'motionBlur'|'bloom'|'godray'|'convolution'|'glitch'|'grayscale'|'noise'|'pixelate'|'rgbsplit'
 export type judge = 'perfect'|'good'|'miss'|'none'
 export type drawer = 'fill'|'stroke'
+export type CollisionDirection = 'None'|'Left'|'Right'|'Up'|'Down';
+
+export interface CollisionResult {
+    collided:boolean;
+    direction:CollisionDirection[];
+}
 
 export interface keys{
     playerLeft:string;
     playerRight:string;
     playerJump:string;
     playerSneak:string;
+    playerRun:string;
     interaction:string;
     escape:string;
 }
@@ -21,7 +28,8 @@ export interface env{
 export interface Rsprite{
     position:[number, number];
     rotation:number;
-    scale:[number, number];
+    width:number;
+    height:number;
     opacity:number;
     anchor:[number, number];
     hitbox:[number, number];
@@ -31,7 +39,8 @@ export interface Rsprite{
 export interface Msprite{
     position:[number, number];
     rotation:number;
-    scale:[number, number];
+    width:number;
+    height:number;
     opacity:number;
     anchor:[number, number];
     hitbox:[number, number];
@@ -40,11 +49,35 @@ export interface Msprite{
     isCollision:boolean;
     isGround:boolean;
     dposition:[number, number];
+    tags:string[];
+    events:mevent[];
+}
+
+export type eventName = 'click'|'collision'|'keydown'|'keyup'|'isground'
+
+export interface mevent{
+    eventName:string;
+    script:string;
 }
 
 export interface player{
+    position:[number, number];
+    rotation:number;
+    width:number;
+    height:number;
+    opacity:number;
+    anchor:[number, number];
+    hitbox:[number, number];
+    src:string;
+    sneakSrc:string;
+    runSrc:string;
+    isGround:boolean;
     isSneak:boolean;
+    isRun:boolean;
+    dposition:[number, number];
+    events:mevent[];
 }
+
 
 export interface text{
     position:[number, number];
@@ -55,6 +88,22 @@ export interface text{
     content:string;
     color:string;
     weight:string;
+}
+
+export interface camera{
+    position:[number, number];
+    rotation:number;
+    scale:number;
+}
+
+export interface map{
+    camera:camera;
+    background:string;
+    sprites:Msprite[];
+    texts:text[];
+    player:player;
+    gravity:number;
+    ground:number;
 }
 
 export interface battleRenderData{
@@ -86,6 +135,7 @@ export interface filter{
     pixelate:number;
     rgbsplit:number;
 }
+
 
 export interface event{
     stamp:number;

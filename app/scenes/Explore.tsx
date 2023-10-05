@@ -1,11 +1,11 @@
 'use client'
 
 import { useContext, useEffect, useState } from "react"
-import { globalContext } from "../main"
+import { globalConfig, globalContext } from "../main"
 import { toLang } from "../data/lang"
 import { execute, exRender } from "../logic/exploreEngine"
 import { useInterval, useWindowSize } from "usehooks-ts"
-import { Msprite, text } from "../data/types"
+import { Msprite, camera, eventName, player, text } from "../data/types"
 import { copy, MsArrToRsArr } from "../data/utils"
 
 export default function Index(){
@@ -14,12 +14,17 @@ export default function Index(){
     const {scene, setScene} = useContext(globalContext)
     const {env, setEnv} = useContext(globalContext)
     const [brightness, setBrightness] = useState<number>(0)
+    const [start, setStart] = useState<boolean>(false)
     const [b_event, setB_event] = useState<string>('')
     const [inputs, setInputs] = useState<string[]>([])
-    const [sprites, setSprites] = useState<Msprite[]>([])
+    const [sprites, setSprites] = useState<Msprite[]>([
+        {position:[500, 550], rotation:0, src:'assets/character/test/test1.png', width:100, height:100, opacity:1, anchor:[0.5, 0.5], dposition:[0, 0], isGravity:false, isCollision:true, isGround:false, hitbox:[1, 1], events:[], tags:['test']},
+    ])
     const [texts, setTexts] = useState<text[]>([])
-    const [gravity, setGravity] = useState<number>(1)
+    const [gravity, setGravity] = useState<number>(0.5)
     const [canControl, setCanControl] = useState<boolean>(true)
+    const [player, setPlayer] = useState<player>(globalConfig['defaultPlayer'])
+    const [camera, setCamera] = useState<camera>(globalConfig['defaultCamera'])
 
     const endWith = (str:string) => {
         setB_event(str)
@@ -47,6 +52,8 @@ export default function Index(){
             if(t >= 1) clearInterval(loop)
         }, 1)
 
+        
+        setStart(true)
     }, [])
 
     useEffect(() => {
@@ -59,23 +66,44 @@ export default function Index(){
             document.removeEventListener('keyup', keyup)
         }
     }, [inputs])
-    
+
     const addInput = (key:string) => {
         let _ar:string[] = copy(inputs)
-        _ar.push(key)
+        if(!_ar.includes(key)) _ar.push(key)
+        sendEvent('keydown')
         setInputs(_ar)
     }
     const remInput = (key:string) => {
         let _ar:string[] = copy(inputs)
         let _i:number = _ar.indexOf(key)
-        _i != -1 ? _ar.splice(_i, 1) : false
+        _i != -1 ? _ar.splice(_i, 1) : null
+        sendEvent('keyup')
         setInputs(_ar)
     }
+
     useInterval(() => {
-        execute(lang, sprites, gravity, inputs, env)
-    }, 1)
+        const _ar = execute(lang, sprites, gravity, inputs, env, player, camera)
+        setSprites(_ar[0])
+        setPlayer(_ar[1])
+        setCamera(_ar[2])
+    }, start ? 10 : null)
+
+    const sendEvent = (eventName:eventName) => {
+        player.events.forEach((_v, _i) => {
+            if(_v.eventName == eventName){
+                eval(_v.script)
+            }
+        })
+        sprites.forEach((_v, _i) => {
+            _v.events.forEach((_v2, _i2) => {
+                if(_v2.eventName == eventName){
+                    eval(_v2.script)
+                }
+            })
+        })
+    }
 
     return <div style={{filter:`brightness(${brightness})`}} className="Explore">
-        {exRender([width, height], lang, MsArrToRsArr(sprites), texts)}
+        {exRender([width, height], lang, MsArrToRsArr(sprites), texts, player, camera)}
     </div>
 }
