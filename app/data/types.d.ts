@@ -4,11 +4,10 @@ export type mainEvType = 'bgcolor'|'filter'|'wiggle'|'position'|'rotate'|'scale'
 export type filterType = 'blur'|'dot'|'motionBlur'|'bloom'|'godray'|'convolution'|'glitch'|'grayscale'|'noise'|'pixelate'|'rgbsplit'
 export type judge = 'perfect'|'good'|'miss'|'none'
 export type drawer = 'fill'|'stroke'
-export type CollisionDirection = 'None'|'Left'|'Right'|'Up'|'Down';
 
-export interface CollisionResult {
-    collided:boolean;
-    direction:CollisionDirection[];
+
+export type EmptyProps = {
+    children?: ReactNode;
 }
 
 export interface keys{
