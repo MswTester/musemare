@@ -42,7 +42,7 @@ export default function Index(){
                     // setAfterBattleScene('FogForest')
                 }
             })
-        }, 2000);
+        }, 1000);
     }, [])
 
     return <div style={{filter:`brightness(${brightness})`}} className="Intro">

@@ -141,13 +141,13 @@ export function MsArrToRsArr(ms:Msprite[]):Rsprite[]{
 }
 
 export function checkCollisionWithPos(pos:[number, number], sp1:Msprite, sp2:Msprite):boolean{
-    const x1 = pos[0] + (sp1.anchor[0]/100) * sp1.width;
-    const y1 = pos[1] + (sp1.anchor[1]/100) * sp1.height;
+    const x1 = pos[0] - (sp1.anchor[0]) * sp1.width;
+    const y1 = pos[1] - (sp1.anchor[1]) * sp1.height;
     const w1 = sp1.width;
     const h1 = sp1.height;
     
-    const x2 = sp2.position[0] + (sp2.anchor[0]/100) * sp2.width;
-    const y2 = sp2.position[1] + (sp2.anchor[1]/100) * sp2.height;
+    const x2 = sp2.position[0] - (sp2.anchor[0]) * sp2.width;
+    const y2 = sp2.position[1] - (sp2.anchor[1]) * sp2.height;
     const w2 = sp2.width;
     const h2 = sp2.height;
     
@@ -155,48 +155,58 @@ export function checkCollisionWithPos(pos:[number, number], sp1:Msprite, sp2:Msp
 }
 
 export function checkCollision(sp1:Msprite, sp2:Msprite):boolean{
-    const x1 = sp1.position[0] + sp1.dposition[0] + (sp1.anchor[0]/100) * sp1.width;
-    const y1 = sp1.position[1] + sp1.dposition[1] + (sp1.anchor[1]/100) * sp1.height;
+    const x1 = sp1.position[0] + sp1.dposition[0] - sp1.anchor[0] * sp1.width;
+    const y1 = sp1.position[1] + sp1.dposition[1] - sp1.anchor[1] * sp1.height;
     const w1 = sp1.width;
     const h1 = sp1.height;
 
-    const x2 = sp2.position[0] + (sp2.anchor[0]/100) * sp2.width;
-    const y2 = sp2.position[1] + (sp2.anchor[1]/100) * sp2.height;
+    const x2 = sp2.position[0] - sp2.anchor[0] * sp2.width;
+    const y2 = sp2.position[1] - sp2.anchor[1] * sp2.height;
     const w2 = sp2.width;
     const h2 = sp2.height;
 
     return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2
 }
 
-export function initCollidedPosition(_me:Msprite, _sprites:Msprite[]):[number, number]{
-    let _m:Msprite = copy(_me);
-    let _c:Msprite[] = copy(_sprites);
-    _c.forEach((_sp:Msprite, _i:number) => {
-        if(_sp.isCollision){
-            if(checkCollisionWithPos([_m.position[0] + _m.dposition[0], _m.position[1]], _m, _sp)){
-                console.log('x collision')
-                if(_m.dposition[0] > 0){
-                    _m.position[0] = _sp.position[0] - (_m.anchor[0]/100) * _m.width - (_sp.anchor[0]/100) * _sp.width -1
-                } else if(_m.dposition[0] < 0){
-                    _m.position[0] = _sp.position[0] + (_sp.anchor[0]/100) * _sp.width + (_m.anchor[0]/100) * _m.width +1
+export function initCollidedPosition(_me: Msprite, _sprites: Msprite[]): Msprite {
+    let _m: Msprite = copy(_me);
+    let _c: Msprite[] = copy(_sprites);
+    let _colcond: boolean = !_c.map(v => v.isCollision && checkCollision(_m, v)).includes(true)
+    _c.forEach((_sp: Msprite, _i: number) => {
+        if (_sp.isCollision) {
+            if(checkCollisionWithPos([_m.position[0] + _m.dposition[0], _m.position[1]], _m, _sp)) {
+                if (_m.dposition[0] > 0) {
+                    _m.position[0] = _sp.position[0] - _m.anchor[0] * _m.width - _sp.anchor[0] * _sp.width
+                } else if (_m.dposition[0] < 0) {
+                    _m.position[0] = _sp.position[0] + _sp.anchor[0] * _sp.width + _m.anchor[0] * _m.width
                 }
-            } else if(checkCollisionWithPos([_m.position[0], _m.position[1] + _m.dposition[1]], _m, _sp)){
-                console.log('y collision')
-                if(_m.dposition[1] > 0){
-                    _m.position[1] = _sp.position[1] - (_m.anchor[1]/100) * _m.height - (_sp.anchor[1]/100) * _sp.height -1
+                _m.dposition[0] = 0
+                _m.position[1] += _m.dposition[1]
+            }
+            if (checkCollisionWithPos([_m.position[0], _m.position[1] + _m.dposition[1]], _m, _sp)) {
+                if (_m.dposition[1] > 0) {
+                    _m.position[1] = _sp.position[1] - _m.anchor[1] * _m.height - _sp.anchor[1] * _sp.height
                     _m.isGround = true
-                } else if(_m.dposition[1] < 0){
-                    _m.position[1] = _sp.position[1] + (_sp.anchor[1]/100) * _sp.height + (_m.anchor[1]/100) * _m.height +1
+                } else if (_m.dposition[1] < 0) {
+                    _m.position[1] = _sp.position[1] + _sp.anchor[1] * _sp.height + _m.anchor[1] * _m.height
                 }
+                _m.dposition[1] = 0
+                _m.position[0] += _m.dposition[0]
             }
         }
     })
-    if(!_c.map(v => v.isCollision && checkCollision(_m, v)).includes(true)){
+    if(!_c.map((_sp: Msprite, _i: number) => {
+        if (_sp.isCollision) {
+            if(checkCollisionWithPos([_m.position[0], _m.position[1]+1], _m, _sp)){
+                return false
+            } else return true
+        } else return true
+    }).includes(false)) _m.isGround = false
+    if (_colcond) {
         _m.position[0] += _m.dposition[0]
         _m.position[1] += _m.dposition[1]
-    }else {
     }
-    return _m.position
+    return _m;
 }
 
 export function playerToMsprite(_player:player){

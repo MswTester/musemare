@@ -7,21 +7,27 @@ import { execute, exRender } from "../logic/exploreEngine"
 import { useInterval, useWindowSize } from "usehooks-ts"
 import { Msprite, camera, eventName, player, text } from "../data/types"
 import { copy, MsArrToRsArr } from "../data/utils"
+import { maps } from "../data/map"
 
 export default function Index(){
     const { width, height } = useWindowSize()
     const {lang, setLang} = useContext(globalContext)
     const {scene, setScene} = useContext(globalContext)
     const {env, setEnv} = useContext(globalContext)
+    const {exploreCode, setExploreCode} = useContext(globalContext)
     const [brightness, setBrightness] = useState<number>(0)
-    const [start, setStart] = useState<boolean>(false)
     const [b_event, setB_event] = useState<string>('')
+
+    // ingame state
+    const [start, setStart] = useState<boolean>(false)
     const [inputs, setInputs] = useState<string[]>([])
     const [sprites, setSprites] = useState<Msprite[]>([
-        {position:[500, 550], rotation:0, src:'assets/character/test/test1.png', width:100, height:100, opacity:1, anchor:[0.5, 0.5], dposition:[0, 0], isGravity:false, isCollision:true, isGround:false, hitbox:[1, 1], events:[], tags:['test']},
+        {position:[500, 500], rotation:0, src:'assets/object/square/square2.png', width:80, height:100, opacity:1, anchor:[0.5, 0.5], dposition:[0, 0], isGravity:false, isCollision:true, isGround:false, hitbox:[1, 1], events:[], tags:['test']},
+        {position:[800, 300], rotation:0, src:'assets/object/square/square2.png', width:80, height:100, opacity:1, anchor:[0.5, 0.5], dposition:[0, 0], isGravity:false, isCollision:true, isGround:false, hitbox:[1, 1], events:[], tags:['test']},
+        {position:[700, 900], rotation:0, src:'assets/object/square/square2.png', width:1500, height:500, opacity:1, anchor:[0.5, 0.5], dposition:[0, 0], isGravity:false, isCollision:true, isGround:false, hitbox:[1, 1], events:[], tags:['test']},
     ])
     const [texts, setTexts] = useState<text[]>([])
-    const [gravity, setGravity] = useState<number>(0.5)
+    const [gravity, setGravity] = useState<number>(0.4)
     const [canControl, setCanControl] = useState<boolean>(true)
     const [player, setPlayer] = useState<player>(globalConfig['defaultPlayer'])
     const [camera, setCamera] = useState<camera>(globalConfig['defaultCamera'])
@@ -52,6 +58,7 @@ export default function Index(){
             if(t >= 1) clearInterval(loop)
         }, 1)
 
+        let _map = maps[exploreCode]
         
         setStart(true)
     }, [])
@@ -104,6 +111,6 @@ export default function Index(){
     }
 
     return <div style={{filter:`brightness(${brightness})`}} className="Explore">
-        {exRender([width, height], lang, MsArrToRsArr(sprites), texts, player, camera)}
+        {exRender([width, height], lang, MsArrToRsArr(sprites), texts, player, camera, true)}
     </div>
 }

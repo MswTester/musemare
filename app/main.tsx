@@ -25,12 +25,12 @@ export const globalConfig:{[key:string]:any} = {
     }},
     startExploreCode:'FogForest',
     defaultPlayer:{
-        position:[0,0],
+        position:[100,0],
         rotation:0,
-        width:100, height:150,
+        width:100, height:120,
         opacity:1,
         anchor:[0.5, 0.5],
-        src:'assets/character/test/test1.png',
+        src:'assets/character/run/001.svg',
         runSrc:'',
         sneakSrc:'',
         dposition:[0, 0],
@@ -75,6 +75,7 @@ export default function Index(){
         scene, setScene,
         lang, setLang,
         battleCode, setBattleCode,
+        exploreCode, setExploreCode,
         afterBattleScene, setAfterBattleScene,
         env, setEnv,
     }}>

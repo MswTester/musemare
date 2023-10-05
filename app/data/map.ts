@@ -1,5 +1,5 @@
 import { map } from "./types";
 
 
-const maps:{[key:string]:map} = {
+export const maps:{[key:string]:map} = {
 }
