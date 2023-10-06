@@ -43,7 +43,8 @@ export interface Msprite{
     opacity:number;
     anchor:[number, number];
     hitbox:[number, number];
-    src:string;
+    src:string[];
+    srcIdx:number;
     isGravity:boolean;
     isCollision:boolean;
     isGround:boolean;
@@ -51,6 +52,7 @@ export interface Msprite{
     tags:string[];
     events:mevent[];
 }
+export type MspriteParams = 'position'|'rotation'|'width'|'height'|'opacity'|'anchor'|'hitbox'|'src'|'isGravity'|'isCollision'|'isGround'|'dposition'|'tags'|'events'
 
 export type eventName = 'click'|'collision'|'keydown'|'keyup'|'isground'
 
@@ -58,6 +60,7 @@ export interface mevent{
     eventName:string;
     script:string;
 }
+export type meventProps = 'eventName'|'script'
 
 export interface player{
     position:[number, number];
@@ -68,8 +71,11 @@ export interface player{
     anchor:[number, number];
     hitbox:[number, number];
     src:string;
+    jumpSrc:string;
     sneakSrc:string;
-    runSrc:string;
+    sneakWalkSrc:string[];
+    runSrc:string[];
+    walkSrc:string[];
     isGround:boolean;
     isSneak:boolean;
     isRun:boolean;
@@ -77,7 +83,7 @@ export interface player{
     events:mevent[];
     tags:string[];
 }
-
+export type playerParams = 'position'|'rotation'|'width'|'height'|'opacity'|'anchor'|'hitbox'|'src'|'sneakSrc'|'runSrc'|'isGround'|'isSneak'|'isRun'|'dposition'|'events'|'tags'
 
 export interface text{
     position:[number, number];
@@ -89,6 +95,7 @@ export interface text{
     color:string;
     weight:string;
 }
+export type textParams = 'position'|'rotation'|'scale'|'opacity'|'anchor'|'content'|'color'|'weight'
 
 export interface camera{
     position:[number, number];
@@ -96,6 +103,7 @@ export interface camera{
     scale:number;
     follow:string;
 }
+export type cameraParams = 'position'|'rotation'|'scale'|'follow'
 
 export interface map{
     camera:camera;

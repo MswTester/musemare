@@ -414,6 +414,11 @@ div.Battle, div.Explore{
   div{
     width: 20%;
     background-color: #333333;
+    button{
+      background-color: #131313;
+      padding: 5px;
+      width: 100%;
+    }
     div{
       width: 100%;
       display: flex;
@@ -429,6 +434,11 @@ div.Battle, div.Explore{
         background-color: #131313;
         border-radius: 10px;
         width: 100px;
+      }
+      textarea{
+        background-color: #131313;
+        border-radius: 10px;
+        width: 200px;
       }
       &.select{
         background-color: #444444;

@@ -21,18 +21,14 @@ export default function Index(){
     // ingame state
     const [start, setStart] = useState<boolean>(false)
     const [inputs, setInputs] = useState<string[]>([])
-    const [sprites, setSprites] = useState<Msprite[]>([
-        {position:[500, 500], rotation:0, src:'assets/object/square/square2.png', width:80, height:100, opacity:1, anchor:[0.5, 0.5], dposition:[0, 0], isGravity:false, isCollision:true, isGround:false, hitbox:[1, 1], events:[], tags:['test']},
-        {position:[800, 300], rotation:0, src:'assets/object/square/square2.png', width:80, height:100, opacity:1, anchor:[0.5, 0.5], dposition:[0, 0], isGravity:false, isCollision:true, isGround:false, hitbox:[1, 1], events:[], tags:['test']},
-        {position:[700, 900], rotation:0, src:'assets/object/square/square2.png', width:1500, height:500, opacity:1, anchor:[0.5, 0.5], dposition:[0, 0], isGravity:false, isCollision:true, isGround:false, hitbox:[1, 1], events:[], tags:['test']},
-    ])
+    const [sprites, setSprites] = useState<Msprite[]>([])
     const [texts, setTexts] = useState<text[]>([])
-    const [gravity, setGravity] = useState<number>(0.3)
+    const [gravity, setGravity] = useState<number>(globalConfig['defaultGravity'])
+    const [ground, setGround] = useState<number>(globalConfig['defaultGround'])
     const [canControl, setCanControl] = useState<boolean>(true)
     const [player, setPlayer] = useState<player>(globalConfig['defaultPlayer'])
     const [camera, setCamera] = useState<camera>(globalConfig['defaultCamera'])
-    const [backgroundColor, setBackgroundColor] = useState<string>('#ffffff')
-    const [ground, setGround] = useState<number>(500)
+    const [backgroundColor, setBackgroundColor] = useState<string>(globalConfig['black'])
 
     const endWith = (str:string) => {
         setB_event(str)
