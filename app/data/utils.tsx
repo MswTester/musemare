@@ -223,7 +223,7 @@ export function playerToMsprite(_player:player){
         isCollision:true,
         isGround:_player.isGround,
         dposition:_player.dposition,
-        tags:[],
+        tags:_player.tags,
         events:_player.events,
     } as Msprite
 }

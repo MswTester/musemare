@@ -39,6 +39,7 @@ export const globalConfig:{[key:string]:any} = {
         isGround:false,
         hitbox:[1, 1],
         events:[],
+        tags:["player"],
     },
     defaultCamera:{
         position:[0,0],

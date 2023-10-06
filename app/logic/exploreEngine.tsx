@@ -4,8 +4,8 @@ import { camera, env, Msprite, player, Rsprite, text } from "../data/types"
 import { Empty, checkCollision, copy, getPos, initCollidedPosition, parseHex, playerToMsprite } from "../data/utils"
 import * as PIXI from 'pixi.js'
 
-export const exRender = (stageSize:[number, number], lang:string, sprites:Rsprite[], texts:text[], player:player, camera:camera, showHitbox?:boolean) => {
-    return <Stage width={stageSize[0]} height={stageSize[1]} options={{backgroundColor:parseHex('#ffffff')}}>
+export const exRender = (stageSize:[number, number], lang:string, sprites:Rsprite[], texts:text[], player:player, camera:camera, backgroundColor:string, showHitbox?:boolean) => {
+    return <Stage width={stageSize[0]} height={stageSize[1]} options={{backgroundColor:parseHex(backgroundColor)}}>
         {sprites.map((_v, _i) => (
             <Empty key={_i}>
                 <Sprite image={_v.src || "assets"} position={_v.position} rotation={_v.rotation*Math.PI/180} width={_v.width} height={_v.height} alpha={_v.opacity} anchor={_v.anchor.map(v => (v+50)/100) as [number]}></Sprite>
@@ -29,7 +29,7 @@ export const exRender = (stageSize:[number, number], lang:string, sprites:Rsprit
     </Stage>
 }
 
-export const execute = (lang:string, sprites:Msprite[], gravity:number, inputs:string[], env:env, player:player, camera:camera):[Msprite[], player, camera] => {
+export const execute = (lang:string, sprites:Msprite[], gravity:number, inputs:string[], env:env, player:player, camera:camera, ground:number):[Msprite[], player, camera] => {
     let _sprites:Msprite[] = copy(sprites)
     let _player:player = copy(player)
     let _camera:camera = copy(camera)
@@ -37,6 +37,10 @@ export const execute = (lang:string, sprites:Msprite[], gravity:number, inputs:s
     // player movement
     if(!_player.isGround){
         _player.dposition[1] += gravity
+    }
+    if(!_player.isGround && _player.position[1] + _player.anchor[1] * _player.height >= ground){
+        _player.dposition[1] = 0
+        _player.isGround = true
     }
     if(inputs.includes(env.keys.playerJump) && _player.isGround){
         _player.dposition[1] = -10
@@ -60,6 +64,10 @@ export const execute = (lang:string, sprites:Msprite[], gravity:number, inputs:s
         // sprite movement
         if(_sprites[_i].isGravity){
             if(!_sprites[_i].isGround){_sprites[_i].dposition[1] += gravity}
+            if(!_sprites[_i].isGround && _sprites[_i].position[1] + _sprites[_i].anchor[1] * _sprites[_i].height >= ground){
+                _sprites[_i].dposition[1] = 0
+                _sprites[_i].isGround = true
+            }
         }
         let _ars:Msprite[] = copy(_sprites)
         _ars.push(playerToMsprite(_player))

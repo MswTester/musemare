@@ -27,10 +27,12 @@ export default function Index(){
         {position:[700, 900], rotation:0, src:'assets/object/square/square2.png', width:1500, height:500, opacity:1, anchor:[0.5, 0.5], dposition:[0, 0], isGravity:false, isCollision:true, isGround:false, hitbox:[1, 1], events:[], tags:['test']},
     ])
     const [texts, setTexts] = useState<text[]>([])
-    const [gravity, setGravity] = useState<number>(0.4)
+    const [gravity, setGravity] = useState<number>(0.3)
     const [canControl, setCanControl] = useState<boolean>(true)
     const [player, setPlayer] = useState<player>(globalConfig['defaultPlayer'])
     const [camera, setCamera] = useState<camera>(globalConfig['defaultCamera'])
+    const [backgroundColor, setBackgroundColor] = useState<string>('#ffffff')
+    const [ground, setGround] = useState<number>(500)
 
     const endWith = (str:string) => {
         setB_event(str)
@@ -89,7 +91,7 @@ export default function Index(){
     }
 
     useInterval(() => {
-        const _ar = execute(lang, sprites, gravity, inputs, env, player, camera)
+        const _ar = execute(lang, sprites, gravity, inputs, env, player, camera, ground)
         setSprites(_ar[0])
         setPlayer(_ar[1])
         setCamera(_ar[2])
@@ -111,6 +113,6 @@ export default function Index(){
     }
 
     return <div style={{filter:`brightness(${brightness})`}} className="Explore">
-        {exRender([width, height], lang, MsArrToRsArr(sprites), texts, player, camera, true)}
+        {exRender([width, height], lang, MsArrToRsArr(sprites), texts, player, camera, backgroundColor, true)}
     </div>
 }

@@ -75,6 +75,7 @@ export interface player{
     isRun:boolean;
     dposition:[number, number];
     events:mevent[];
+    tags:string[];
 }
 
 
@@ -93,11 +94,12 @@ export interface camera{
     position:[number, number];
     rotation:number;
     scale:number;
+    follow:string;
 }
 
 export interface map{
     camera:camera;
-    background:string;
+    backgroundColor:string;
     sprites:Msprite[];
     texts:text[];
     player:player;
