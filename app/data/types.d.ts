@@ -5,7 +5,6 @@ export type filterType = 'blur'|'dot'|'motionBlur'|'bloom'|'godray'|'convolution
 export type judge = 'perfect'|'good'|'miss'|'none'
 export type drawer = 'fill'|'stroke'
 
-
 export type EmptyProps = {
     children?: ReactNode;
 }

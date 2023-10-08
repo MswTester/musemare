@@ -62,6 +62,8 @@ export const execute = (lang:string, sprites:Msprite[], gravity:number, inputs:s
     _player.dposition[0] = _newSpr.dposition[0]
     _player.dposition[1] = _newSpr.dposition[1]
     _player.isGround = _newSpr.isGround
+
+    // player animation
     
     _sprites.forEach((_v, _i) => {
         // sprite movement
@@ -74,6 +76,7 @@ export const execute = (lang:string, sprites:Msprite[], gravity:number, inputs:s
             }
         }
         let _ars:Msprite[] = copy(_sprites)
+        _ars.splice(_i, 1)
         _ars.push(playerToMsprite(_player))
         
         let _newSpr:Msprite = initCollidedPosition(_sprites[_i], _ars)
