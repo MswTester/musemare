@@ -43,6 +43,7 @@ export const globalConfig:{[key:string]:any} = {
         hitbox:[1, 1],
         events:[],
         tags:["player"],
+        showHitbox:true,
     },
     defaultCamera:{
         position:[0,0],

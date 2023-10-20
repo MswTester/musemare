@@ -411,7 +411,7 @@ div.Battle, div.Explore{
   canvas{
     width: 60%;
   }
-  div{
+  div:not(.eventmap){
     width: 20%;
     background-color: #333333;
     button{
@@ -429,6 +429,7 @@ div.Battle, div.Explore{
         background-color: #131313;
         border-radius: 10px;
         padding: 5px;
+        width: 80px;
       }
       input{
         background-color: #131313;
@@ -438,10 +439,46 @@ div.Battle, div.Explore{
       textarea{
         background-color: #131313;
         border-radius: 10px;
-        width: 200px;
+        width: 130px;
       }
       &.select{
         background-color: #444444;
+      }
+    }
+  }
+  div.back{
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    background-color: rgba($color: #000000, $alpha: 0.4);
+  }
+  div.eventmap{
+    position: fixed;
+    width: 80%;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+    border-radius: 10px;
+    background-color: #303030;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    details{
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      margin: 10px;
+      summary{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        div{background-color: unset;width: unset;}
+        input{
+          background-color: #000000;
+          border-radius: 10px;
+        }
       }
     }
   }

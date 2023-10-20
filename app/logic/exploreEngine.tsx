@@ -1,6 +1,6 @@
 import { FC, ReactNode } from 'react'
 import { Container, Graphics, Sprite, Stage, Text } from "@pixi/react"
-import { camera, env, Msprite, player, Rsprite, text } from "../data/types"
+import { camera, env, exevent, Msprite, player, Rsprite, text } from "../data/types"
 import { Empty, checkCollision, copy, getPos, initCollidedPosition, parseHex, playerToMsprite } from "../data/utils"
 import * as PIXI from 'pixi.js'
 
@@ -10,7 +10,7 @@ export const exRender = (stageSize:[number, number], lang:string, sprites:Rsprit
             {sprites.map((_v, _i) => (
                 <Empty key={_i}>
                     <Sprite image={_v.src || "assets"} position={_v.position} rotation={_v.rotation*Math.PI/180} width={_v.width} height={_v.height} alpha={_v.opacity} anchor={_v.anchor.map(v => (v+50)/100) as [number]}></Sprite>
-                    {showHitbox && <Graphics draw={g => {
+                    {showHitbox && _v.showHitbox && <Graphics draw={g => {
                         g.clear()
                         g.lineStyle(1, 0x00ff00)
                         g.drawRect(_v.position[0] - _v.width * _v.anchor[0], _v.position[1] - _v.height * _v.anchor[1], _v.width, _v.height)
@@ -22,7 +22,7 @@ export const exRender = (stageSize:[number, number], lang:string, sprites:Rsprit
                 position={_v.position} rotation={_v.rotation*Math.PI/180} scale={_v.scale} alpha={_v.opacity} pivot={[_v.anchor[0]*5+230, _v.anchor[1]*0.5+50]}/>
             ))}
             <Sprite image={(player.src) || "assets"} position={player.position} rotation={player.rotation*Math.PI/180} width={player.width} height={player.height} alpha={player.opacity} anchor={player.anchor.map(v => (v+50)/100) as [number]}></Sprite>
-            {showHitbox && <Graphics draw={g => {
+            {showHitbox && player.showHitbox && <Graphics draw={g => {
                 g.clear()
                 g.lineStyle(1, 0x00ff00)
                 g.drawRect(player.position[0] - player.width * player.anchor[0], player.position[1] - player.height * player.anchor[1], player.width, player.height)
@@ -31,10 +31,11 @@ export const exRender = (stageSize:[number, number], lang:string, sprites:Rsprit
     </Stage>
 }
 
-export const execute = (lang:string, sprites:Msprite[], gravity:number, inputs:string[], env:env, player:player, camera:camera, ground:number):[Msprite[], player, camera] => {
+export const execute = (lang:string, sprites:Msprite[], gravity:number, inputs:string[], activeEvents:exevent[], env:env, player:player, camera:camera, ground:number):[Msprite[], player, camera, exevent[]] => {
     let _sprites:Msprite[] = copy(sprites)
     let _player:player = copy(player)
     let _camera:camera = copy(camera)
+    let _events:exevent[] = copy(activeEvents)
 
     // player movement
     if(!_player.isGround){
@@ -97,5 +98,5 @@ export const execute = (lang:string, sprites:Msprite[], gravity:number, inputs:s
             _camera.position[1] = _ars[_i].position[1]
         }
     })
-    return [_sprites, _player, _camera]
+    return [_sprites, _player, _camera, _events]
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { use, useContext, useEffect, useState } from "react"
-import { Msprite, camera, env, eventName, map, mevent, player, playerParams, text } from "../data/types"
+import { Msprite, camera, env, event, eventName, exevent, map, mevent, player, playerParams, text } from "../data/types"
 import { globalConfig, globalContext } from "../main"
 import { useInterval, useWindowSize } from "usehooks-ts"
 import { exRender, execute } from "../logic/exploreEngine"
@@ -26,9 +26,12 @@ export default function Page(){
     const [mouseStartPoint, setMouseStartPoint] = useState<[number, number]>([0, 0])
     const [mouseOffsetPoint, setMouseOffsetPoint] = useState<[number, number]>([0, 0])
     const [isMouseDown, setIsMouseDown] = useState<boolean>(false)
+    const [isEventMapOpen, setIsEventMapOpen] = useState<boolean>(false)
+    const [focusingEvent, setFocusingEvent] = useState<number>(-1)
 
     const [start, setStart] = useState<boolean>(false)
     const [inputs, setInputs] = useState<string[]>([])
+    const [activeEvents, setActiveEvents] = useState<exevent[]>([])
     const [sprites, setSprites] = useState<Msprite[]>([])
     const [texts, setTexts] = useState<text[]>([])
     const [gravity, setGravity] = useState<number>(globalConfig['defaultGravity'])
@@ -68,22 +71,21 @@ export default function Page(){
     }
 
     useInterval(() => {
-        const _ar = execute(lang, sprites, gravity, inputs, env, player, camera, ground)
+        const _ar = execute(lang, sprites, gravity, inputs, activeEvents, env, player, camera, ground)
         setSprites(_ar[0])
         setPlayer(_ar[1])
         setCamera(_ar[2])
+        setActiveEvents(_ar[3])
     }, start ? 10 : null)
 
     const sendEvent = (eventName:eventName) => {
         player.events.forEach((_v, _i) => {
             if(_v.eventName == eventName){
-                eval(_v.script)
             }
         })
         sprites.forEach((_v, _i) => {
             _v.events.forEach((_v2, _i2) => {
                 if(_v2.eventName == eventName){
-                    eval(_v2.script)
                 }
             })
         })
@@ -137,6 +139,7 @@ export default function Page(){
             isGravity:false,
             isGround:false,
             isCollision:true,
+            showHitbox:true,
             src:[''],
             srcIdx:0,
             hitbox:[1, 1],
@@ -156,6 +159,12 @@ export default function Page(){
         let _ar:Msprite[] = copy(sprites)
         _ar[index][key] = value
         setSprites(_ar)
+    }
+
+    const setCameraAttr = <K extends keyof camera>(key: K, value: camera[K]): void => {
+        let _camera: camera = copy(camera)
+        _camera[key] = value
+        setCamera(_camera)
     }
 
     // resize msprite    
@@ -223,6 +232,20 @@ export default function Page(){
         }
     }, [focusing, sprites, mouseStartPoint, mouseOffsetPoint])
 
+    const openEventMap = () => {
+        setFocusingEvent(focusing)
+        setIsEventMapOpen(true)
+    }
+
+    const createEventMap = (_v:mevent, _i:number) => {
+        return <details key={_i}>
+            <summary>
+                <div>{_v.eventName}</div>
+                <input type="text" name="" id="" value={_v.target} onChange={e => e.target.value}/>
+            </summary>
+        </details>
+    }
+
     return <div className="MapEditor">
         <div>
             <div>
@@ -261,9 +284,9 @@ export default function Page(){
             </div>
             <hr />
             <button onClick={e => {createSprite()}}>Create Sprite</button>
-            <div className={focusing == -1 ? "select" : ""} onClick={e => {setFocusing(-1)}}>player</div>
+            <div className={focusing == -1 ? "select" : ""} onClick={e => {setFocusing(-1);setEvText("")}}>player</div>
             {sprites.map((_v, _i) => (
-                <div onClick={e => {setFocusing(_i)}} key={_i} className={focusing == _i ? "select" : ""}>
+                <div onClick={e => {setFocusing(_i);setEvText("")}} key={_i} className={focusing == _i ? "select" : ""}>
                     {_v.tags.join(' ')}
                 </div>
             ))}
@@ -340,10 +363,15 @@ export default function Page(){
                     }} onFocus={e => {
                         setEvText(JSON.stringify(player.events))
                     }}></textarea>
+                    <button onClick={openEventMap}>Event Map</button>
                 </div>
                 <div>
                     <label>Tags</label>
                     <input type="text" value={player.tags.join(' ')} onChange={(e) => {setPlayerAttr('tags', e.target.value.split(' '))}} />
+                </div>
+                <div>
+                    <label>showHitbox</label>
+                    <input type="checkbox" checked={player.showHitbox} onChange={(e) => {setPlayerAttr('showHitbox', e.target.checked)}} />
                 </div>
             </> : <>
                 <div>
@@ -399,6 +427,7 @@ export default function Page(){
                     }} onFocus={e => {
                         setEvText(JSON.stringify(sprites[focusing].events))
                     }}></textarea>
+                    <button onClick={openEventMap}>Event Map</button>
                 </div>
                 <div>
                     <label>Tags</label>
@@ -412,9 +441,18 @@ export default function Page(){
                     <label>isCollision</label>
                     <input type="checkbox" checked={sprites[focusing].isCollision} onChange={(e) => {setMspriteAttr('isCollision', e.target.checked, focusing)}} />
                 </div>
+                <div>
+                    <label>showHitbox</label>
+                    <input type="checkbox" checked={sprites[focusing].showHitbox} onChange={(e) => {setMspriteAttr('showHitbox', e.target.checked, focusing)}} />
+                </div>
                 <button onClick={e => {setSizing(true)}}>{sizing ? "Sizing..." : "Set Size"}</button>
             </>}
         </div>
+        {isEventMapOpen && <div className="back" onMouseDown={e => setIsEventMapOpen(false)}></div>}
+        {isEventMapOpen && <div className="eventmap">{
+            focusing == -1 ? player.events.map((_v, _i) => createEventMap(_v, _i)) :
+            sprites[focusingEvent].events.map((_v, _i) => createEventMap(_v, _i))
+        }</div>}
         <input type="file" name="" id="fileInput" style={{display:'none'}} />
     </div>
 }

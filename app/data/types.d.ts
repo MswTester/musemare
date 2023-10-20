@@ -32,6 +32,7 @@ export interface Rsprite{
     anchor:[number, number];
     hitbox:[number, number];
     src:string;
+    showHitbox:boolean;
 }
 
 export interface Msprite{
@@ -47,17 +48,30 @@ export interface Msprite{
     isGravity:boolean;
     isCollision:boolean;
     isGround:boolean;
+    showHitbox:boolean;
     dposition:[number, number];
     tags:string[];
     events:mevent[];
 }
 export type MspriteParams = 'position'|'rotation'|'width'|'height'|'opacity'|'anchor'|'hitbox'|'src'|'isGravity'|'isCollision'|'isGround'|'dposition'|'tags'|'events'
 
-export type eventName = 'click'|'collision'|'keydown'|'keyup'|'isground'
+export type eventName = 'click'|'collision'|'keydown'|'keyup'|'isground';
 
+export type scriptType = 'setAttribute';
+
+export interface exevent{
+    eventName:eventName;
+    target:string|number;
+    once?:boolean;
+}
+export interface script{
+    type:scriptType;
+    value:any;
+}
 export interface mevent{
     eventName:string;
-    script:string;
+    target:string|number;
+    scripts:script[];
 }
 export type meventProps = 'eventName'|'script'
 
@@ -78,6 +92,7 @@ export interface player{
     isGround:boolean;
     isSneak:boolean;
     isRun:boolean;
+    showHitbox:boolean;
     dposition:[number, number];
     events:mevent[];
     tags:string[];

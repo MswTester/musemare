@@ -133,7 +133,7 @@ export function lvlToRendata(lv:level):battleRenderData{
 
 export function MsToRs(ms:Msprite):Rsprite{
     return {anchor:ms.anchor, hitbox:ms.hitbox, opacity:ms.opacity, position:ms.position, rotation:ms.rotation,
-    width:ms.width, height:ms.height, src:ms.src[ms.srcIdx]}
+    width:ms.width, height:ms.height, src:ms.src[ms.srcIdx], showHitbox:ms.showHitbox}
 }
 
 export function MsArrToRsArr(ms:Msprite[]):Rsprite[]{
@@ -226,6 +226,7 @@ export function playerToMsprite(_player:player){
         dposition:_player.dposition,
         tags:_player.tags,
         events:_player.events,
+        showHitbox:_player.showHitbox,
     } as Msprite
 }
 
