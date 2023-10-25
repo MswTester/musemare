@@ -36,10 +36,8 @@ export default function Index(){
             setCanSkip(true)
             window.addEventListener('keydown', e => {
                 if(e.code == 'KeyF'){
-                    endWith('Explore')
-                    // endWith('Battle')
-                    // setBattleCode('moai')
-                    // setAfterBattleScene('FogForest')
+                    endWith('Selector')
+                    setAfterBattleScene('Selector')
                 }
             })
         }, 1000);

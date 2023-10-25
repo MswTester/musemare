@@ -71,6 +71,34 @@ const langs:{[key:string]:{[key:string]:string}} = {
         'ko':'오디오 트랙',
         'en':'Audio Track',
     },
+    'fogforest':{
+        'ko':'안개숲',
+        'en':'Fog Forest',
+    },
+    'gloomcave':{
+        'ko':'어둠동굴',
+        'en':'Gloom Cave',
+    },
+    'jungle':{
+        'ko':'정글',
+        'en':'Jungle',
+    },
+    'wasteland':{
+        'ko':'황무지',
+        'en':'Wasteland',
+    },
+    'test':{
+        'ko':'테스트',
+        'en':'Test',
+    },
+    'moai':{
+        'ko':'모아이',
+        'en':'Moai',
+    },
+    'dogbite':{
+        'ko':'개물림',
+        'en':'Dog Bite',
+    },
 }
 
 export function toLang(lang:string, data:string){

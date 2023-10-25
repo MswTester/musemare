@@ -56,7 +56,7 @@ export default function Index(){
                     <div>냉장고 문선우 푸른슬라임</div>
                     <div>냉장고</div>
                     <div>문선우 푸른슬라임</div>
-                    <div>누굴까</div>
+                    <div>BilliumMoto</div>
                     <div>학원쌤</div>
                 </div>
             </div>

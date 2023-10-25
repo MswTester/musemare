@@ -1,15 +1,18 @@
 'use client'
 
 import { useContext, useEffect, useState } from "react"
-import { globalContext } from "../main"
+import { globalContext, globalConfig } from "../main"
 import { toLang } from "../data/lang"
+import { levels } from "../data/level"
 
 export default function Index(){
     const {lang, setLang} = useContext(globalContext)
     const {scene, setScene} = useContext(globalContext)
+    const {battleCode, setBattleCode} = useContext(globalContext)
+    const {afterBattleScene, setAfterBattleScene} = useContext(globalContext)
     const [brightness, setBrightness] = useState<number>(0)
     const [b_event ,setB_event] = useState<string>('')
-    const [settingMenu, setSettingMenu] = useState<string>('general')
+    const [selected, setSelected] = useState<string>('')
 
     const endWith = (str:string) => {
         setB_event(str)
@@ -38,18 +41,18 @@ export default function Index(){
         }, 1)
     }, [])
 
-    return <div style={{filter:`brightness(${brightness})`}} className="Settings fullscreen blackbg">
-        <div className="container">
-            <div className="menu">
-                {['general', 'video', 'audio', 'controls'].map((v, i) => (
-                    <div onClick={e => setSettingMenu(v)} className={v == settingMenu ? 'active' : ''}
-                    key={i}>{toLang(lang, v)}</div>
-                ))}
-            </div>
-            <div className="options">
-                <div>sometinh:true</div>
-            </div>
-        </div>
+    return <div style={{filter:`brightness(${brightness})`}} className="Selector fullscreen blackbg">
+        {!selected ? (globalConfig['mapList'] as string[]).map((v, i) => (
+            <div key={i} onClick={e => setSelected(v)}>{toLang(lang, v)}</div>
+        )):
+        <>{(globalConfig['levelList'] as string[][])[(globalConfig['mapList'] as string[]).indexOf(selected)].map((v, i) => (
+            <div key={i} onClick={e => {
+                setBattleCode(v)
+                endWith('Battle')
+                setAfterBattleScene('Selector')
+            }}>{toLang(lang, v)}</div>
+        ))}
+        <div onClick={e => setSelected('')}>{toLang(lang, 'goback')}</div></>}
         <div className="goback" onClick={e => endWith('MainMenu')}>{toLang(lang, 'goback')}</div>
     </div>
 }

@@ -7,6 +7,7 @@ import Settings from './scenes/Settings'
 import Credits from './scenes/Credits'
 import Battle from './scenes/Battle'
 import Explore from './scenes/Explore'
+import Selector from './scenes/Selector'
 import { env } from "./data/types"
 
 // 글로벌 설정
@@ -14,15 +15,19 @@ export const globalConfig:{[key:string]:any} = {
     startScene:'MainMenu',
     defaultLang:'en-US',
     testBattleCode:'test',
-    defaultEnv:{keys:{
-        playerLeft:'KeyA',
-        playerRight:'KeyD',
-        playerJump:'Space',
-        playerRun:'ShiftLeft',
-        playerSneak:'ControlLeft',
-        interaction:'KeyF',
-        escape:'Escape',
-    }},
+    defaultEnv:{
+        keys:{
+            playerLeft:'KeyA',
+            playerRight:'KeyD',
+            playerJump:'Space',
+            playerRun:'ShiftLeft',
+            playerSneak:'ControlLeft',
+            interaction:'KeyF',
+            escape:'Escape',
+        },
+        language:'en-US',
+        volume:1
+    },
     startExploreCode:'FogForest',
     defaultPlayer:{
         position:[0,0],
@@ -55,6 +60,13 @@ export const globalConfig:{[key:string]:any} = {
     defaultGround:300,
     black:'#000000',
     white:'#ffffff',
+    mapList:['fogforest', 'gloomcave', 'jungle', 'wasteland'],
+    levelList:[
+        ['test'],
+        ['moai'],
+        ['dogbite'],
+        ['test'],
+    ],
 }
 
 export const globalContext = createContext<any>({})
@@ -98,6 +110,7 @@ export default function Index(){
             scene == 'Credits' ? <Credits /> :
             scene == 'Battle' ? <Battle /> :
             scene == 'Explore' ? <Explore /> :
+            scene == 'Selector' ? <Selector /> :
             <></>)
         }
     </globalContext.Provider>

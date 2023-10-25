@@ -16,7 +16,7 @@ export default function Index(){
             str == 'credits' ? endWith('Credits') :
             str == 'settings' ? endWith('Settings') :
             str == 'new game' ? endWith('Intro') :
-            str == 'continue' && '' // continue play
+            str == 'continue' && endWith('Selector')
         }
     }
     const endWith = (str:string) => {
