@@ -36,6 +36,8 @@ export default function Index(){
             setBrightness(t)
             if(t >= 1) clearInterval(loop)
         }, 1)
+
+        return () => clearInterval(loop)
     }, [])
 
     return <div style={{filter:`brightness(${brightness})`}} className="Settings fullscreen blackbg">

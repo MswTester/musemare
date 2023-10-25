@@ -5,7 +5,7 @@ import { globalConfig, globalContext } from "../main"
 import { toLang } from "../data/lang"
 import { execute, exRender } from "../logic/exploreEngine"
 import { useInterval, useWindowSize } from "usehooks-ts"
-import { Msprite, camera, eventName, player, text } from "../data/types"
+import { Msprite, camera, eventName, exevent, mevent, player, text } from "../data/types"
 import { copy, MsArrToRsArr } from "../data/utils"
 import { maps } from "../data/map"
 
@@ -21,6 +21,7 @@ export default function Index(){
     // ingame state
     const [start, setStart] = useState<boolean>(false)
     const [inputs, setInputs] = useState<string[]>([])
+    const [event, setEvent] = useState<exevent[]>([])
     const [sprites, setSprites] = useState<Msprite[]>([])
     const [texts, setTexts] = useState<text[]>([])
     const [gravity, setGravity] = useState<number>(globalConfig['defaultGravity'])
@@ -59,6 +60,8 @@ export default function Index(){
         let _map = maps[exploreCode]
         
         setStart(true)
+    
+        return () => clearInterval(loop)
     }, [])
 
     useEffect(() => {
@@ -87,7 +90,7 @@ export default function Index(){
     }
 
     useInterval(() => {
-        const _ar = execute(lang, sprites, gravity, inputs, env, player, camera, ground)
+        const _ar = execute(lang, sprites, gravity, inputs, event, env, player, camera, ground)
         setSprites(_ar[0])
         setPlayer(_ar[1])
         setCamera(_ar[2])
@@ -96,13 +99,13 @@ export default function Index(){
     const sendEvent = (eventName:eventName) => {
         player.events.forEach((_v, _i) => {
             if(_v.eventName == eventName){
-                eval(_v.script)
+                // eval(_v.target)
             }
         })
         sprites.forEach((_v, _i) => {
             _v.events.forEach((_v2, _i2) => {
                 if(_v2.eventName == eventName){
-                    eval(_v2.script)
+                    // eval(_v2.script)
                 }
             })
         })
