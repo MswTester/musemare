@@ -493,17 +493,22 @@ div.Battle, div.Explore{
   flex-direction: column;
   justify-content: space-around;
   div:not(.goback){
-    border: 1px solid white;
-    transform: translate(50%, 0);
+    border: 2px solid white;
+    transform: translate(100%, 0);
     font-size: min(4vw, 8vh);
     padding: min(1vw, 2vh);
     border-radius: 10px;
+    width: 50%;
     cursor: pointer;
     transition: transform 0.3s ease;
-    &:hover{
+    &:not(.disabled):hover{
       text-decoration: underline;
-      transform: translate(52%, 5%);
+      transform: translate(102%, 5%);
       transition: transform 0.3s ease;
+    }
+    &.disabled{
+      opacity: 0.5;
+      cursor: default;
     }
   }
 }
