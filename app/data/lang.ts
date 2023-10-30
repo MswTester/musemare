@@ -99,6 +99,10 @@ const langs:{[key:string]:{[key:string]:string}} = {
         'ko':'개물림',
         'en':'Dog Bite',
     },
+    'ending':{
+        'ko':'엔딩',
+        'en':'Ending',
+    },
 }
 
 export function toLang(lang:string, data:string){
