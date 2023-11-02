@@ -170,12 +170,13 @@ export const battleEngine = (timeline:number, hits:number[], stageSize:[number, 
         }
     })
 
+    const globalSize = Math.max(stageSize[0], stageSize[1])/1000
     return <Stage width={stageSize[0]} height={stageSize[1]} options={{backgroundColor:parseHex(base.backgroundColor)}}>
         <Sprite image={"assets/object/square/square1.png"} width={stageSize[0]} height={stageSize[1]} tint={parseHex(base.backgroundColor)}></Sprite>
         <Container filters={createFilter(base, timeline) as PIXI.Filter[]} pivot={[base.position[0]/100*stageSize[0], base.position[1]/100*stageSize[1]]} x={stageSize[0]/2} y={stageSize[1]/2} scale={base.scale} rotation={base.rotate*Math.PI/180}>
             {base.objs.map((v, i) => (
-                v.type == 'sprite' && v.visible ? <Sprite key={i} image={v.src || "assets"} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} anchor={v.anchor.map(v => (v+50)/100) as [number]}></Sprite>:
-                v.type == 'chart' && v.visible && <Graphics key={i} draw={g => chartDraw(g, v, timeline)} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={v.scale} alpha={v.opacity} pivot={[v.anchor[0]*5, v.anchor[1]*0.5]}/>
+                v.type == 'sprite' && v.visible ? <Sprite key={i} image={v.src || "assets"} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={[v.scale[0]*globalSize, v.scale[1]*globalSize]} alpha={v.opacity} anchor={v.anchor.map(v => (v+50)/100) as [number]}></Sprite>:
+                v.type == 'chart' && v.visible && <Graphics key={i} draw={g => chartDraw(g, v, timeline)} position={getPos(v.position, stageSize)} rotation={v.rotate*Math.PI/180} scale={[v.scale[0]*globalSize, v.scale[1]*globalSize]} alpha={v.opacity} pivot={[v.anchor[0]*5, v.anchor[1]*0.5]}/>
             ))}
             {playing && base.objs.map((v, i) => (
                 InitJudges(v, i, timeline, stageSize)

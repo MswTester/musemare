@@ -5,8 +5,9 @@ import { Empty, checkCollision, copy, getPos, initCollidedPosition, parseHex, pl
 import * as PIXI from 'pixi.js'
 
 export const exRender = (stageSize:[number, number], lang:string, sprites:Rsprite[], texts:text[], player:player, camera:camera, backgroundColor:string, showHitbox?:boolean) => {
+    const globalSize = Math.max(stageSize[0], stageSize[1])/1000
     return <Stage width={stageSize[0]} height={stageSize[1]} options={{backgroundColor:parseHex(backgroundColor)}}>
-        <Container pivot={[camera.position[0], camera.position[1]]} x={stageSize[0]/2} y={stageSize[1]/2} scale={camera.scale} rotation={camera.rotation*Math.PI/180}>
+        <Container pivot={[camera.position[0], camera.position[1]]} x={stageSize[0]/2} y={stageSize[1]/2} scale={camera.scale*globalSize} rotation={camera.rotation*Math.PI/180}>
             {sprites.map((_v, _i) => (
                 <Empty key={_i}>
                     <Sprite image={_v.src || "assets"} position={_v.position} rotation={_v.rotation*Math.PI/180} width={_v.width} height={_v.height} alpha={_v.opacity} anchor={_v.anchor.map(v => (v+50)/100) as [number]}></Sprite>
